@@ -1,0 +1,8 @@
+CHIP Add3Way16 {
+  IN first[16], second[16], third[16];
+  OUT out[16];
+
+  PARTS:
+  Add16(a=first, b=second, out=temp);
+  Add16(a=temp, b=third, out=out)
+}
