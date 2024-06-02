@@ -65,5 +65,6 @@ CHIP ALU {
     // Output zr
     Or8Way(in=firstEight, out=firstZr);
     Or8Way(in=secondEight, out=secondZr);
-    Or(a=firstZr, b=secondZr, out=zr);
+    Or(a=firstZr, b=secondZr, out=invertedZr);
+    Not(in=invertedZr, out=zr);
 }
