@@ -60,7 +60,7 @@ CHIP ALU {
 
     // Negate the output?
     Not16(in=functionOutput, out=notFunctionOutput);
-    Mux16(a=functionOutput, b=notFunctionOutput, sel=no, out=finalOutput, out=out, out[15]=ng, out[0..7]=firstEight, out[8..15]=secondEight);
+    Mux16(a=functionOutput, b=notFunctionOutput, sel=no, out=out, out[15]=ng, out[0..7]=firstEight, out[8..15]=secondEight);
     
     // Output zr
     Or8Way(in=firstEight, out=firstZr);
