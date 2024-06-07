@@ -55,6 +55,7 @@ D;JMP
 D=A
 @targetregister
 M=D
+
 (WHITEOUT)
 // Check if we are done 
 @24576
