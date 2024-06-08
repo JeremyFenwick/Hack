@@ -14,7 +14,7 @@
 // And(a=a, b=reverseSel, out=aout);
 // And(a=b, b=sel, out=bout);
 // Or(a=aout, b=bout, out=out);
-y
+
 CHIP Mux4Way16 {
     IN a[16], b[16], c[16], d[16], sel[2];
     OUT out[16];
