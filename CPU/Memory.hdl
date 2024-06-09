@@ -31,12 +31,13 @@ CHIP Memory {
 //                 [0, 0, in, 0] if sel = 10
 //                 [0, 0, 0, in] if sel = 11
 
-    DMux4Way(in=load, sel=address[13..14], a=ramLoad, b=ramLoad2, c=screenLoad, d=null);
-    Or(a=ramLoad, b=ramLoad2, out=ramLoadFinal);
+    DMux4Way(in=load, sel=address[13..14], a=ramLoad1, b=ramLoad2, c=screenLoad, d=keyboardLoad);
+    Or(a=ramLoad1, b=ramLoad2, out=ramLoadFinal);
     RAM16K(in=in, load=ramLoadFinal, address=address[0..13], out=ramOut);
     Screen(in=in, load=screenLoad, address=address[0..12], out=screenOut);
     Keyboard(out=keyboardOut);
-/**
+
+/*
  * 4-way 16-bit multiplexor:
  * out = a if sel = 00
  *       b if sel = 01
@@ -45,3 +46,4 @@ CHIP Memory {
  */
     Mux4Way16(a=ramOut, b=ramOut, c=screenOut, d=keyboardOut, sel=address[13..14], out=out);
 }
+
