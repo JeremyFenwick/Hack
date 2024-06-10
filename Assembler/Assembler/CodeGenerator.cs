@@ -5,6 +5,7 @@ public class CodeGenerator
     private SymbolTable _symbolTableWithLabels;
     private Dictionary<int, string> _parsedCode;
     private int _variableCounter = 16;
+    private List<string> _binaryCode = new();
 
     public CodeGenerator(SymbolTable symbolTableWithLabels, Dictionary<int, string> parsedCode)
     {
@@ -60,4 +61,45 @@ public class CodeGenerator
     }
     
     // Handle C instructions
+    public string CInstructionToBinary(string line)
+    {
+        string binaryBuild = "111";
+        var destIndex = line.IndexOf('=');
+        // Handle the comp value
+        var startCompIndex = destIndex == -1 ? 0 : destIndex + 1;
+        var compText = "";
+        foreach (var character in line[startCompIndex..])
+        {
+            if (character == ';') break;
+            compText += character;
+        }
+        var compValue = CInstructionLookup.CompToBinary(compText);
+        binaryBuild += compValue;
+        // Handle the dest value
+        if (destIndex == -1)
+        {
+            var destValue = CInstructionLookup.DestToBinary("null");
+            binaryBuild += destValue;
+        }
+        else
+        {
+            var destSearchValue = line.Substring(0, destIndex);
+            var destValue = CInstructionLookup.DestToBinary(destSearchValue);
+            binaryBuild += destValue;
+        }
+        // Handle the jump value
+        var jumpIndex = line.IndexOf(';');
+        if (jumpIndex == -1)
+        {
+            var jumpValue = CInstructionLookup.JumpToBinary("null");
+            binaryBuild += jumpValue;
+        }
+        else
+        {
+            var jumpSearchValue = line.Substring(jumpIndex + 1);
+            var jumpValue = CInstructionLookup.JumpToBinary(jumpSearchValue);
+            binaryBuild += jumpValue;
+        }
+        return binaryBuild;
+    }
 }

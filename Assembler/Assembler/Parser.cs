@@ -27,8 +27,8 @@ public class Parser
             {
                 unCommentedLine = lineWithoutWhitespace.Substring(0, commentIndex);
             }
-            // If the line is only whitespace, continue
-            if (string.IsNullOrWhiteSpace(unCommentedLine)) continue;
+            // If the line is empty, continue
+            if (string.IsNullOrEmpty(unCommentedLine)) continue;
             // Deal with the case where the line is a label symbol
             if (unCommentedLine[0] == '(')
             {
