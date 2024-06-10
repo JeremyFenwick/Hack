@@ -11,6 +11,37 @@ public class CodeGenerator
     {
         _symbolTableWithLabels = symbolTableWithLabels;
         _parsedCode = parsedCode;
+        CodeGenRoutine();
+    }
+
+    public List<string> GetBinaryCode()
+    {
+        return _binaryCode;
+    }
+
+    private void CodeGenRoutine()
+    {
+        foreach (var (key, value) in _parsedCode)
+        {
+            string codeLine;
+            // Check for an L instruction
+            if (value[0] == '@' && char.IsLetter(value[1]) && char.IsUpper(value[1]))
+            {
+                var lBinaryString = LInstructionToBinary(value);
+                _binaryCode.Add(lBinaryString);
+                continue;
+            }
+            // Check for an A instruction
+            if (value[0] == '@')
+            {
+                var aBinaryString = AInstructionToBinary(value);
+                _binaryCode.Add(aBinaryString);
+                continue;
+            }
+            // Else, it must be a C instruction
+            var cBinaryString = CInstructionToBinary(value);
+            _binaryCode.Add(cBinaryString);
+        }
     }
     
     // Handle A instructions
