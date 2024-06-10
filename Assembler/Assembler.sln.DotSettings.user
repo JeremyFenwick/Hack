@@ -1,0 +1,23 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=161e38a8_002Dc996_002D4c28_002D9fbb_002D88b80899e38d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="FirstInstruction #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.LInstructionTests.FirstInstruction&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.LInstructionTests.SecondInstruction&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.AInstructionTests.FirstAInstructionTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.AInstructionTests.CheckCreationOfNewVariable&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.AInstructionTests.CheckCreationOfNewVariables&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1d0cb3cb_002D4dc4_002D4009_002Daab5_002D260839aa736e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="RemoveComments" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.Tests.RemoveComments&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.Tests.LabelParting&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.Tests.LabelParsing&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.LInstructionTests.FirstInstruction&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=bd905fb8_002Ddca0_002D4d9f_002Db63d_002D53e56588c97e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="FirstInstruction" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::DA3B65EE-C871-4D88-BD63-A1B6A54D1C01::net8.0::AssemblerTests.LInstructionTests.FirstInstruction&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
