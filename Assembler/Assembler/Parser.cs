@@ -11,10 +11,10 @@ public class Parser
     {
         _rawAssembly = rawAssembly;
         _symbolTable = symbolTable;
-        InitalPass();
+        InitalPassRoutine();
     }
     
-    private void InitalPass()
+    private void InitalPassRoutine()
     {
         foreach (var line in _rawAssembly)
         {
