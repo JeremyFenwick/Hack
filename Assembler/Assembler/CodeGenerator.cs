@@ -23,7 +23,6 @@ public class CodeGenerator
     {
         foreach (var (key, value) in _parsedCode)
         {
-            string codeLine;
             // Check for an L instruction
             if (value[0] == '@' && char.IsLetter(value[1]) && char.IsUpper(value[1]))
             {
