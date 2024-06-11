@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler", "Assembler\Assembler.csproj", "{49A416F0-8DF4-4C02-A8B5-DA43E43EF474}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler.Core", "Assembler.Core\Assembler.Core.csproj", "{49A416F0-8DF4-4C02-A8B5-DA43E43EF474}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblerTests", "AssemblerTests\AssemblerTests.csproj", "{DA3B65EE-C871-4D88-BD63-A1B6A54D1C01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembler.Tests", "Assembler.Tests\Assembler.Tests.csproj", "{DA3B65EE-C871-4D88-BD63-A1B6A54D1C01}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
