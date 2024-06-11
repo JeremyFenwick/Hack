@@ -11,8 +11,8 @@ public static class CInstructionLookup
         "A"      => "0110000",
         "M"      => "1110000",
         "!D"     => "0001101",
-        "!A"     => "0110011",
-        "!M"     => "1110011",
+        "!A"     => "0110001",
+        "!M"     => "1110001",
         "-D"     => "0001111",
         "-A"     => "0110011",
         "-M"     => "1110011",
@@ -32,7 +32,7 @@ public static class CInstructionLookup
         "D&M"    => "1000000",
         "D|A"    => "0010101",
         "D|M"    => "1010101",
-        _        => throw new Exception("Comp value not in lookup table!")
+        _        => throw new Exception($"Comp value {comp }not in lookup table!")
     };
     
     public static string DestToBinary(string dest) => dest switch
@@ -41,11 +41,12 @@ public static class CInstructionLookup
         "M"      => "001",
         "D"      => "010",
         "DM"     => "011",
+        "MD"     => "011",
         "A"      => "100",
         "AM"     => "101",
         "AD"     => "110",
         "ADM"    => "111",
-        _        => throw new Exception("Dest value not in the lookup table!")
+        _        => throw new Exception($"Dest value {dest} not in the lookup table!")
     };
     
     public static string JumpToBinary(string jump) => jump switch
@@ -58,6 +59,6 @@ public static class CInstructionLookup
         "JNE"    => "101",
         "JLE"    => "110",
         "JMP"    => "111",
-        _        => throw new Exception("Jump value not in the lookup table!")
+        _        => throw new Exception($"Jump value {jump} not in the lookup table!")
     };
 }
