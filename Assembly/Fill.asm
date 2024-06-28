@@ -8,8 +8,11 @@
 //     for register in Screen
 //     {
 //       register = -1
-//     }
-          
+//     } 
+//   }
+//   else 
+//   {
+//       break;
 //   }
 // } (true)
 
