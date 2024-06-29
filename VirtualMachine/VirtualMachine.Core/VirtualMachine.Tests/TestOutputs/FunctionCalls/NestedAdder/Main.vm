@@ -1,0 +1,13 @@
+function Main.main 0
+	push constant 4000
+	push constant 2000
+	push constant 3000
+	call Main.SecondAdder 2
+	add
+	return
+
+function Main.SecondAdder 0
+	push argument 0
+	push argument 1
+	add
+	return

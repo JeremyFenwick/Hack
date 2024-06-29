@@ -25,4 +25,8 @@
       <ProjectReference Include="..\VirtualMachine.Core\VirtualMachine.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TestOutputs\" />
+    </ItemGroup>
+
 </Project>

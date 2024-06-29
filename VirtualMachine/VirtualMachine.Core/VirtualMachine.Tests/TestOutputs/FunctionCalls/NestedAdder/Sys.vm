@@ -1,0 +1,10 @@
+function Sys.init 0
+	// push constant 600	// tests that THIS and THAT are handled correctly
+	// pop pointer 0
+	// push constant 700
+	// pop pointer 1
+	call Main.main 0
+	label LOOP
+	goto LOOP
+
+
