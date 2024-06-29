@@ -2,11 +2,16 @@
 
 namespace VirtualMachine.Core;
 
-public static class CommandCodeGenerator
+public class CommandCodeGenerator
 {
-    private static int _uniqueInteger = 1;
-    private static bool _zeroArgFunction = false;
-    public static Command CommandCodeGen(Command command)
+    private int _uniqueInteger = 1;
+    private string _fileName;
+
+    public CommandCodeGenerator(string fileName)
+    {
+        _fileName = fileName;
+    }
+    public Command CommandCodeGen(Command command)
     {
         switch (command.CommandType)
         {
@@ -33,7 +38,7 @@ public static class CommandCodeGenerator
         }
     }
 
-    private static Command PushHandler(Command command)
+    private Command PushHandler(Command command)
     {
         // Add the command in as a comment
         command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne} {command.ArgumentTwo}");
@@ -76,7 +81,7 @@ public static class CommandCodeGenerator
         }
         else if (command.ArgumentOne == "static")
         {
-            command.AssemblyCommandList.Add($"@static{command.ArgumentTwo}");
+            command.AssemblyCommandList.Add($"@static.{_fileName}.{command.ArgumentTwo}");
             command.AssemblyCommandList.Add("D=M");
         }
         else
@@ -92,7 +97,7 @@ public static class CommandCodeGenerator
         return command;
     }
     
-    private static Command PopHandler(Command command)
+    private Command PopHandler(Command command)
     {
         // Add the command in as a comment
         command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne} {command.ArgumentTwo}");
@@ -141,7 +146,7 @@ public static class CommandCodeGenerator
             command.AssemblyCommandList.Add("A=M");
             command.AssemblyCommandList.Add("D=M");
             // Load D into the static variable address
-            command.AssemblyCommandList.Add($"@static{command.ArgumentTwo}");
+            command.AssemblyCommandList.Add($"@static.{_fileName}.{command.ArgumentTwo}");
             command.AssemblyCommandList.Add("M=D");
         }
         else if (command.ArgumentOne == "pointer")
@@ -169,7 +174,7 @@ public static class CommandCodeGenerator
         return command;
     }
 
-    private static Command ArithmeticHandler(Command command)
+    private Command ArithmeticHandler(Command command)
     {
         // Add the command in as a comment
         command.AssemblyCommandList.Add($"// {command.CommandText}");
@@ -296,21 +301,21 @@ public static class CommandCodeGenerator
         return command;
     }
     
-    private static Command LabelHandler(Command command)
+    private Command LabelHandler(Command command)
     {
         command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne}");
         command.AssemblyCommandList.Add($"({command.ArgumentOne})");
         return command;
     }
 
-    private static Command GotoHandler(Command command)
+    private Command GotoHandler(Command command)
     {
         command.AssemblyCommandList.Add($"@{command.ArgumentOne}");
         command.AssemblyCommandList.Add($"0;JMP");
         return command;
     }
 
-    private static Command GotoIfHandler(Command command)
+    private Command GotoIfHandler(Command command)
     {
         command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne}");
         // Pop the stack
@@ -324,10 +329,10 @@ public static class CommandCodeGenerator
 
         return command;
     }
-    private static Command CallHandler(Command command)
+    private Command CallHandler(Command command)
     {
-        _zeroArgFunction = (command.ArgumentTwo is null or 0);
-        switch (_zeroArgFunction)
+        var zeroArgFunction = (command.ArgumentTwo is null or 0);
+        switch (zeroArgFunction)
         {
             case false:
                 command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne} {command.ArgumentTwo}");
@@ -398,7 +403,7 @@ public static class CommandCodeGenerator
         command.AssemblyCommandList.Add("D=M");
         command.AssemblyCommandList.Add("@5");
         command.AssemblyCommandList.Add("D=D-A");
-        command.AssemblyCommandList.Add(!_zeroArgFunction ? $"@{command.ArgumentTwo}" : $"@0");
+        command.AssemblyCommandList.Add(!zeroArgFunction ? $"@{command.ArgumentTwo}" : $"@0");
         command.AssemblyCommandList.Add("D=D-A");
         command.AssemblyCommandList.Add("@ARG");
         command.AssemblyCommandList.Add("M=D");
@@ -423,7 +428,7 @@ public static class CommandCodeGenerator
         return command;
     }
 
-    private static Command FunctionHandler(Command command)
+    private Command FunctionHandler(Command command)
     {
         command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne} {command.ArgumentTwo}");
         // Declare function entry label
@@ -442,7 +447,7 @@ public static class CommandCodeGenerator
         return command;
     }
     
-    private static Command ReturnHandler(Command command)
+    private Command ReturnHandler(Command command)
     {
         command.AssemblyCommandList.Add($"// {command.CommandText}");
 

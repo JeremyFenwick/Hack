@@ -31,8 +31,8 @@ public class ControlTests
             ArgumentOne = "TESTLABEL",
             AssemblyCommandList = new List<string>()
         };
-
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[0], Is.EqualTo("(TESTLABEL)"));
     }
     
@@ -48,7 +48,8 @@ public class ControlTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);        
         Assert.That(currentCommand.AssemblyCommandList[0], Is.EqualTo("@TESTLABEL"));
         Assert.That(currentCommand.AssemblyCommandList[1], Is.EqualTo("0;JMP"));
     }
@@ -65,7 +66,8 @@ public class ControlTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[0], Is.EqualTo("@SP"));
     }
 }

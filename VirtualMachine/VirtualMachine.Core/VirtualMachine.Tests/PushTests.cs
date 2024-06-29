@@ -19,7 +19,8 @@ public class PushTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[1], Is.EqualTo("@11"));
     }
     
@@ -36,7 +37,8 @@ public class PushTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[3], Is.EqualTo("@LCL"));
     }
     
@@ -53,7 +55,8 @@ public class PushTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[1], Is.EqualTo("@7"));
     }
     
@@ -70,7 +73,8 @@ public class PushTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[1], Is.EqualTo("@static3"));
     }
     
@@ -87,7 +91,8 @@ public class PushTests
             AssemblyCommandList = new List<string>()
         };
 
-        currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+        var codeGen = new CommandCodeGenerator("Sys");
+        currentCommand = codeGen.CommandCodeGen(currentCommand);
         Assert.That(currentCommand.AssemblyCommandList[1], Is.EqualTo("@THAT"));
     }
 }

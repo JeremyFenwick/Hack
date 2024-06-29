@@ -1,4 +1,7 @@
-﻿namespace VirtualMachine.Core;
+﻿using System.Globalization;
+using System.Net.Mime;
+
+namespace VirtualMachine.Core;
 
 public class VirtualMachineReadWriter
 {
@@ -53,13 +56,14 @@ public class VirtualMachineReadWriter
         rawVmCode.Insert(0,"call Sys.init");
         // Now generate the assembly file
         var parser = new Parser(rawVmCode);
+        var codeGen = new CommandCodeGenerator("Sys");
         using var streamWriter = File.AppendText(outputFile);
         do
         {
             parser.Advance();
             var currentCommand = parser.CurrentCommand;
             if (currentCommand == null) break;
-            currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
+            currentCommand = codeGen.CommandCodeGen(currentCommand);
             foreach (var assemblyCommand in currentCommand.AssemblyCommandList)
             {
                 streamWriter.WriteLine(assemblyCommand);
@@ -71,13 +75,14 @@ public class VirtualMachineReadWriter
     private void HandleDirectory()
     {
         var fileList = Directory.GetFiles(_fileOrDirectory);
-        if (!File.Exists(_fileOrDirectory + "Sys.vm"))
+        if (!File.Exists(_fileOrDirectory + "\\Sys.vm"))
         {
-            throw new Exception("A file named \"Sys.vm\" is required in the target folder");
+            Console.WriteLine("A file named \"Sys.vm\" is required in the target folder");
+            Environment.Exit(1);
         }
-        List<string> rawVmCode;
+        Dictionary<string, List<string>> rawVmCode = [];
         // Write the code to a .hack file
-        var outputFile = $"{_fileOrDirectory}\\Sys.asm";
+        var outputFile = $"{_fileOrDirectory}\\{new DirectoryInfo(_fileOrDirectory).Name}.asm";
         var newFs = File.Create(outputFile);
         newFs.Close();
         // Bootstrap the asm code to set the stack pointer
@@ -89,28 +94,34 @@ public class VirtualMachineReadWriter
         bootstrapWriter.WriteLine("M=D");
         bootstrapWriter.Close();
         // Add the Sys.vm to the raw code first
-        rawVmCode = File.ReadLines(_fileOrDirectory + "Sys.vm").ToList();
+        rawVmCode.Add("Sys", File.ReadLines(_fileOrDirectory + "\\Sys.vm").ToList()); 
         // Bootstrap the vm code
-        rawVmCode.Insert(0,"call Sys.init");
+        rawVmCode["Sys"].Insert(0,"call Sys.init");
         // Loop through remaining vm files and append their text to the list
         foreach (var file in fileList)
         {
             if (Path.GetExtension(file) != ".vm") continue;
             if (Path.GetFileNameWithoutExtension(file) == "Sys") continue;
-            rawVmCode = File.ReadLines(file).ToList();
+            var fileCode = File.ReadLines(file).ToList();
+            rawVmCode.Add(Path.GetFileNameWithoutExtension(file),fileCode);
         }
-        var parser = new Parser(rawVmCode);
-        using var streamWriter = File.AppendText(outputFile);
-        do
+
+        foreach (var (file, codeList) in rawVmCode)
         {
-            parser.Advance();
-            var currentCommand = parser.CurrentCommand;
-            if (currentCommand == null) break;
-            currentCommand = CommandCodeGenerator.CommandCodeGen(currentCommand);
-            foreach (var assemblyCommand in currentCommand.AssemblyCommandList)
+            var codeGen = new CommandCodeGenerator(file);
+            var parser = new Parser(codeList);
+            using var streamWriter = File.AppendText(outputFile);
+            do
             {
-                streamWriter.WriteLine(assemblyCommand);
-            }
-        } while (parser.HasMoreLines);
+                parser.Advance();
+                var currentCommand = parser.CurrentCommand;
+                if (currentCommand == null) break;
+                currentCommand = codeGen.CommandCodeGen(currentCommand);
+                foreach (var assemblyCommand in currentCommand.AssemblyCommandList)
+                {
+                    streamWriter.WriteLine(assemblyCommand);
+                }
+            } while (parser.HasMoreLines);
+        }
     }
 }
