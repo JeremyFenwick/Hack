@@ -326,7 +326,7 @@ public static class CommandCodeGenerator
     }
     private static Command CallHandler(Command command)
     {
-        if (command.ArgumentTwo is null or 0) _zeroArgFunction = true;
+        _zeroArgFunction = (command.ArgumentTwo is null or 0);
         switch (_zeroArgFunction)
         {
             case false:
@@ -384,7 +384,7 @@ public static class CommandCodeGenerator
         // PUSH THAT
         command.AssemblyCommandList.Add($"// PUSH THAT");
         // Set D to THAT
-        command.AssemblyCommandList.Add("@THIS");
+        command.AssemblyCommandList.Add("@THAT");
         command.AssemblyCommandList.Add("D=M");
         // Push THAT onto the stack
         command.AssemblyCommandList.Add("@SP");
@@ -428,8 +428,6 @@ public static class CommandCodeGenerator
         command.AssemblyCommandList.Add($"// {command.CommandText} {command.ArgumentOne} {command.ArgumentTwo}");
         // Declare function entry label
         command.AssemblyCommandList.Add($"({command.ArgumentOne})");
-        // If there are no variables break early
-        if (_zeroArgFunction) return command;
         // Push 0's onto the stack according to nvars
         for (var i = 0; i < command.ArgumentTwo; i++)
         {
@@ -463,17 +461,13 @@ public static class CommandCodeGenerator
         command.AssemblyCommandList.Add("D=D-A");
         command.AssemblyCommandList.Add("@R14");
         command.AssemblyCommandList.Add("M=D");
-
-        if (_zeroArgFunction)
-        {
-            // Store the return address is R15
-            command.AssemblyCommandList.Add("@ARG");
-            command.AssemblyCommandList.Add("A=M");
-            command.AssemblyCommandList.Add("D=M");
-            command.AssemblyCommandList.Add("@R15");
-            command.AssemblyCommandList.Add("M=D");
-            
-        }
+        
+        // Store the return address in R15
+        command.AssemblyCommandList.Add("@R14");
+        command.AssemblyCommandList.Add("A=M");
+        command.AssemblyCommandList.Add("D=M");
+        command.AssemblyCommandList.Add("@R15");
+        command.AssemblyCommandList.Add("M=D");
 
         // Pop the stack and place the value in the ARG Pointer
         command.AssemblyCommandList.Add($"// Pop the stack and place the value in arg 0");
@@ -529,25 +523,12 @@ public static class CommandCodeGenerator
         command.AssemblyCommandList.Add("@LCL");
         command.AssemblyCommandList.Add("M=D");
 
-        if (!_zeroArgFunction)
-        {
-            // GOTO returnAddress
-            command.AssemblyCommandList.Add($"// GOTO returnAddress");
-            command.AssemblyCommandList.Add("@R14");
-            command.AssemblyCommandList.Add("A=M");
-            command.AssemblyCommandList.Add("A=M");
-            command.AssemblyCommandList.Add("0;JMP");
-        }
-        else
-        {
-            // GOTO returnAddress and hot swap the return value
-            command.AssemblyCommandList.Add($"// GOTO returnAddress (stored in @R15)");
-            command.AssemblyCommandList.Add("@R15");
-            command.AssemblyCommandList.Add("A=M");
-            command.AssemblyCommandList.Add("0;JMP");
-        }
-
-        _zeroArgFunction = false;
+        // GOTO returnAddress from @R15
+        command.AssemblyCommandList.Add($"// GOTO returnAddress (stored in @R15)");
+        command.AssemblyCommandList.Add("@R15");
+        command.AssemblyCommandList.Add("A=M");
+        command.AssemblyCommandList.Add("0;JMP");
+        
         return command;
     }
 }
