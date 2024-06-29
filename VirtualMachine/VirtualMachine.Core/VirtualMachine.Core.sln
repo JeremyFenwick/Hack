@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtualMachine.Core", "VirtualMachine.Core\VirtualMachine.Core.csproj", "{9ED5F68D-69FD-41F5-944A-6DE363F4F5DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtualMachine.Tests", "VirtualMachine.Tests\VirtualMachine.Tests.csproj", "{9A222B65-BB80-4684-BDE3-34C7A0CCAFC5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9ED5F68D-69FD-41F5-944A-6DE363F4F5DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9ED5F68D-69FD-41F5-944A-6DE363F4F5DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9ED5F68D-69FD-41F5-944A-6DE363F4F5DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9ED5F68D-69FD-41F5-944A-6DE363F4F5DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A222B65-BB80-4684-BDE3-34C7A0CCAFC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A222B65-BB80-4684-BDE3-34C7A0CCAFC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A222B65-BB80-4684-BDE3-34C7A0CCAFC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A222B65-BB80-4684-BDE3-34C7A0CCAFC5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
