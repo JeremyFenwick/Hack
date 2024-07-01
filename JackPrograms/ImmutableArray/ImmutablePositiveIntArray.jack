@@ -1,0 +1,57 @@
+class ImmutablePositiveIntArray {
+  // Fields
+  field int length;
+  field Array array;
+  field Array filledValues;
+
+  // Constructor
+  constructor ImmutablePositiveIntArray new(int arrayLength) 
+  {
+    let length = arrayLength;
+    let array = Array.new(arrayLength);
+    let filledValues = Array.new(arrayLength);
+    return this;
+  }
+
+  // Disposal
+  method void dispose() 
+  {
+    do Memory.deAlloc(this);  // uses an OS routine to recycle the memory held by the object
+    return;
+  }
+
+  // Set value in an array by index
+  method boolean setValue(int index, int value)
+  {
+    if (filledValues[index] = 32767) 
+    {
+      return false;
+    }
+
+    if (index > (length - 1))
+    {
+      return false;
+    }
+
+    let filledValues[index] = 32767;
+    let array[index] = value;
+
+    return true;
+  }
+
+  // Get a value if it exists, otherwise return 0
+  method int getValue(int index) 
+  {
+    if (~(filledValues[index] = 32767)) 
+    {
+      return 32767;
+    }
+
+    if (index > (length - 1))
+    {
+      return 32767;
+    }
+
+    return array[index];
+  }
+}

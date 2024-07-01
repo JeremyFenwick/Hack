@@ -1,0 +1,60 @@
+class Main {
+  function void main() 
+  {
+    var ImmutablePositiveIntArray staticArray;
+    var boolean response;
+    var int x, y, z;
+
+    let staticArray = ImmutablePositiveIntArray.new(4);
+    do staticArray.setValue(0, 10);
+
+    let response = staticArray.setValue(0, 20);
+    if (response = false) 
+    {
+      do Output.printString("Did not mutate immutable value!");
+      do Output.println();
+    }
+
+    let response = staticArray.setValue(2, 30);
+    if (response = true) 
+    {
+      do Output.printString("Added second value successfully!");
+      do Output.println();
+    }
+
+    let y = staticArray.getValue(2); 
+    do Output.printString("Array 2 value: ");
+    do Output.printInt(y);
+    do Output.println();
+    
+
+    let response = staticArray.setValue(5, 20);
+    if (response = false) 
+    {
+      do Output.printString("Did not attempt to add a value of out bounds! (Index exceeds length)");
+      do Output.println();
+    }
+
+    let response = staticArray.setValue(4, 20);
+    if (response = false) 
+    {
+      do Output.printString("Did not attempt to add a value of out bounds! (Index equals length)");
+      do Output.println();
+    }
+
+    let y = staticArray.getValue(0); 
+    do Output.printString("Array 0 value: ");
+    do Output.printInt(y);
+    do Output.println();
+
+    let x = staticArray.getValue(0);
+    if (x = 10) 
+    {
+      do Output.printString("Successfully retrieved value!");
+      do Output.println();
+    }
+
+    do staticArray.dispose();
+    return;
+  }
+}

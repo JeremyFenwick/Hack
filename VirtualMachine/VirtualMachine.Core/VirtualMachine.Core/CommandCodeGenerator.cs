@@ -467,7 +467,7 @@ public class CommandCodeGenerator
         command.AssemblyCommandList.Add("@R14");
         command.AssemblyCommandList.Add("M=D");
         
-        // Store the return address in R15
+        // Store the return address value in R15
         command.AssemblyCommandList.Add("@R14");
         command.AssemblyCommandList.Add("A=M");
         command.AssemblyCommandList.Add("D=M");
