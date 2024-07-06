@@ -141,6 +141,7 @@ public class Tokenizer : ITokenizer
             TokenValue = result
         };
     }
+    
     private void ParseSymbolToken(string codeSnippet)
     {
         Token = new Token()
@@ -154,6 +155,7 @@ public class Tokenizer : ITokenizer
             _currentLine.AddFirst(codeSnippet.Substring(1));  
         }
     }
+    
     private void ParseIntegerConstantToken(string codeSnippet)
     {
         var result = "";
