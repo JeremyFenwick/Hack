@@ -312,7 +312,7 @@ public class Tokenizer : ITokenizer
                 continue;
             }
             workingString += codeLine[i];
-            // If we are at the end, enqueue what is left
+            // If we are at the end, add what is left
             if (i == codeLine.Length - 1)
             {
                 result.AddLast(workingString);
