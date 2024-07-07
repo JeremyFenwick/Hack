@@ -36,23 +36,29 @@ public class CompilationEngine
     {
         WriteXmlLine(false, "class");
         _indentationLevel++;
+        // class
         TokenToXmlLine(CurrentToken, TokenType.Keyword, true, ["class"]);
-        // Name of class
+        // main
         TokenToXmlLine(CurrentToken, TokenType.Identifier, false);
+        // {
         TokenToXmlLine(CurrentToken, TokenType.Symbol, true, ["{"]);
-
+        // field int example;
+        // function int exampleFunction(int x, bool y)
         while (true)
         {
             if (CurrentToken.TokenValue is "static" or "field")
             {
                 ClassVariableDeclaration();
+            } else if (CurrentToken.TokenValue is "constructor" or "function" or "method")
+            {
+                ClassSubroutineDeclaration();
             }
             else
             {
                 break;
             }
         }
-        
+        // }
         TokenToXmlLine(CurrentToken, TokenType.Symbol, true, ["}"]);
         _indentationLevel--;
         WriteXmlLine(true, "class");
@@ -62,10 +68,11 @@ public class CompilationEngine
     {
         WriteXmlLine(false, "classVariableDeclaration");
         _indentationLevel++;
+        // static
         TokenToXmlLine(CurrentToken, TokenType.Keyword, true, ["static", "field"]);
-        // Type of field (bool, int, char or a className)
+        // int
         TokenToXmlLine(CurrentToken, TokenType.Identifier, false);
-        // Loop over the variables declared as there may be more than one
+        // x, y, z
         do
         {
             TokenToXmlLine(CurrentToken, TokenType.Identifier, false);
@@ -75,37 +82,53 @@ public class CompilationEngine
             }
             TokenToXmlLine(CurrentToken, TokenType.Symbol, true, [","]);
         } while (true);
+        // ;
         TokenToXmlLine(CurrentToken, TokenType.Symbol, true, [";"]);
         _indentationLevel--;
         WriteXmlLine(true, "classVariableDeclaration");
     }
 
-    private void SubroutineDeclaration()
+    private void ClassSubroutineDeclaration()
     {
         WriteXmlLine(false, "subroutineDeclaration");
         _indentationLevel++;
-        
+        // function
         TokenToXmlLine(CurrentToken, TokenType.Keyword, true, ["constructor", "function", "method"]);
-        TokenToXmlLine(CurrentToken, TokenType.Identifier, true, ["int", "bool", "char", "void"]);
-        // Subroutine name
+        // void
+        TokenToXmlLine(CurrentToken, TokenType.Keyword, true, ["int", "bool", "char", "void"]);
+        // exampleFunction
         TokenToXmlLine(CurrentToken, TokenType.Identifier, false);
+        // (
         TokenToXmlLine(CurrentToken, TokenType.Symbol, true, ["("]);
-        // Parameter/s?
+        WriteXmlLine(false, "parameterList");
+        _indentationLevel++;
+        // int x, bool y
         while (true)
         {
             if (CurrentToken.TokenValue != ")")
             {
-                
+                TokenToXmlLine(CurrentToken, TokenType.Keyword, true, ["int", "bool", "char"]);
+                TokenToXmlLine(CurrentToken, TokenType.Identifier, false);
             }
-            else
+            if (CurrentToken.TokenValue == ",")
+            {
+                TokenToXmlLine(CurrentToken, TokenType.Symbol, true, [","]);
+            }
+            else if (CurrentToken.TokenValue == ")")
             {
                 break;
             }
         }
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, true, ["("]);
+        _indentationLevel--;
+        WriteXmlLine(false, "parameterList");
+        // )
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, true, [")"]);
         
         _indentationLevel--;
         WriteXmlLine(true, "subroutineDeclaration");
+        WriteXmlLine(false, "subroutineBody");
+        
+        WriteXmlLine(true, "subroutineBody");
     }
 
     private void TokenToXmlLine(Token token, TokenType expectedTokenType, bool checkValues, List<string>? expectedValues = null, bool advanceToken = true)
@@ -151,6 +174,6 @@ public class CompilationEngine
     private void TerminateCompilationRoutine()
     {
         _logger.LogCritical("Encountered an unrecoverable error. Exiting...");
-        Environment.Exit(1);
+        // Environment.Exit(1);
     }
 }
