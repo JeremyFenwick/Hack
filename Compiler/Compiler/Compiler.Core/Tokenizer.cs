@@ -7,7 +7,7 @@ namespace Compiler.Core;
 public class Tokenizer : ITokenizer
 {
     private Queue<string> _jackCode;
-    private LinkedList<string> _currentLine = null!;
+    private LinkedList<string> _currentLine;
     private ILogger _logger;
     private readonly List<char> _symbols =
     [
@@ -22,11 +22,13 @@ public class Tokenizer : ITokenizer
     ];
 
     public bool HasMoreTokens { get; private set; }
-    public Token CurrentToken { get; private set; } = null!;
+    public Token CurrentToken { get; private set; } 
     public string CurrentLine => string.Join(" ", _currentLine);
 
     public Tokenizer(IEnumerable<string> jackCode, ILogger logger)
     {
+        _currentLine = null!;
+        CurrentToken = null!;
         _logger = logger;
         _jackCode = RemoveComments(jackCode);
         NextCodeLine();

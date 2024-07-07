@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Compiler.Test;
 
-public class TokenizerTesting
+public class Tokenizer
 {
-    public Tokenizer SetupTokenizer(List<string> codeList)
+    public Core.Tokenizer SetupTokenizer(List<string> codeList)
     {
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = factory.CreateLogger<Tests>();
-        var tokenizer = new Tokenizer(codeList, logger);
+        var tokenizer = new Core.Tokenizer(codeList, logger);
         return tokenizer;
     }
     
