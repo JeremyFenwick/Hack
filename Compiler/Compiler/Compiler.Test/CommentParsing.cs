@@ -1,9 +1,18 @@
 using Compiler.Core;
+using Microsoft.Extensions.Logging;
 
 namespace Compiler.Test;
 
 public class Tests
 {
+    public Tokenizer SetupTokenizer(List<string> codeList)
+    {
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+        var logger = factory.CreateLogger<Tests>();
+        var tokenizer = new Tokenizer(codeList, logger);
+        return tokenizer;
+    }
+    
     [Test]
     public void SimpleCommentRemoval()
     {
@@ -11,7 +20,7 @@ public class Tests
         codeList.Add("// First test comment");
         codeList.Add("let x = 100;");
 
-        var tokenizer = new Tokenizer(codeList);
+        var tokenizer = SetupTokenizer(codeList);
 
         Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
     }
@@ -23,7 +32,7 @@ public class Tests
         codeList.Add("/** First test comment */");
         codeList.Add("let x = 100;");
 
-        var tokenizer = new Tokenizer(codeList);
+        var tokenizer = SetupTokenizer(codeList);
         Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
     }
     
@@ -36,7 +45,7 @@ public class Tests
         codeList.Add("Third test comment */");
         codeList.Add("let x = 100;");
 
-        var tokenizer = new Tokenizer(codeList);
+        var tokenizer = SetupTokenizer(codeList);
 
         Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
     }
@@ -49,7 +58,7 @@ public class Tests
         codeList.Add("Second test comment");
         codeList.Add("Third test comment */let x = 100;");
 
-        var tokenizer = new Tokenizer(codeList);
+        var tokenizer = SetupTokenizer(codeList);
         Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
     }
     
@@ -61,7 +70,7 @@ public class Tests
         codeList.Add("Second test comment");
         codeList.Add("Third test comment */let y = 200;");
 
-        var tokenizer = new Tokenizer(codeList);
+        var tokenizer = SetupTokenizer(codeList);
         Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
     }
     
@@ -71,8 +80,7 @@ public class Tests
         var codeList = new List<string>();
         codeList.Add("let x = \" hello  world \"");
 
-
-        var tokenizer = new Tokenizer(codeList);
+        var tokenizer = SetupTokenizer(codeList);
         Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = \" hello  world \""));
     }
 }

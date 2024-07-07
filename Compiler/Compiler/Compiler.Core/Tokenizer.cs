@@ -1,5 +1,6 @@
 ﻿using Compiler.Core.Enums;
 using Compiler.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core;
 
@@ -7,6 +8,7 @@ public class Tokenizer : ITokenizer
 {
     private Queue<string> _jackCode;
     private LinkedList<string> _currentLine = null!;
+    private ILogger _logger;
     private readonly List<char> _symbols =
     [
         '{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '|', '<', '>', '=', '~'
@@ -20,11 +22,12 @@ public class Tokenizer : ITokenizer
     ];
 
     public bool HasMoreTokens { get; private set; }
-    public Token Token { get; private set; } = null!;
+    public Token CurrentToken { get; private set; } = null!;
     public string CurrentLine => string.Join(" ", _currentLine);
 
-    public Tokenizer(IEnumerable<string> jackCode)
+    public Tokenizer(IEnumerable<string> jackCode, ILogger logger)
     {
+        _logger = logger;
         _jackCode = RemoveComments(jackCode);
         NextCodeLine();
     }
@@ -79,6 +82,7 @@ public class Tokenizer : ITokenizer
             return true;
         }
         
+        _logger.LogError($"Failed to identify code snipper {workingCodeSnippet}");
         throw new Exception("Unknown case in the advance function");
     }
 
@@ -98,14 +102,15 @@ public class Tokenizer : ITokenizer
                 _currentLine.AddFirst(codeSnippet.Substring(i));  
                 break;
             }
-
+            _logger.LogError($"Illegal character while parsing identifier: {codeSnippet[i]}");
             throw new Exception("Illegal character found while parsing identifier");
         }
-        Token = new Token()
+        CurrentToken = new Token()
         {
             TokenType = TokenType.Identifier,
             TokenValue = result
         };
+        LogTokenCreation(CurrentToken);
     }
 
     private void ParseStringToken(string codeSnippet)
@@ -131,25 +136,28 @@ public class Tokenizer : ITokenizer
             }
             if (i == codeSnippet.Length - 1 && codeSnippet[i] != '"')
             {
+                _logger.LogError($"String did not end with character \", instead found: {codeSnippet[i]}");
                 throw new Exception("String parsing failure! String did not end with close quotes");
             }
             result += codeSnippet[i];
         }
-        Token = new Token()
+        CurrentToken = new Token()
         {
             TokenType = TokenType.StringConst,
             TokenValue = result
         };
+        LogTokenCreation(CurrentToken);
     }
     
     private void ParseSymbolToken(string codeSnippet)
     {
-        Token = new Token()
+        CurrentToken = new Token()
         {
             TokenType = TokenType.Symbol,
             TokenValue = codeSnippet[0].ToString()
         };
-        
+        LogTokenCreation(CurrentToken);
+
         if (codeSnippet.Length > 1)
         {
             _currentLine.AddFirst(codeSnippet.Substring(1));  
@@ -171,24 +179,26 @@ public class Tokenizer : ITokenizer
                 _currentLine.AddFirst(codeSnippet.Substring(i));   
                 break;
             }
+            _logger.LogError($"Illegal character found while parsing integer constant: {codeSnippet[i]}");
             throw new Exception("Illegal character found while parsing integer constant");
         }
         
-        Token = new Token()
+        CurrentToken = new Token()
         {
             TokenType = TokenType.IntConst,
             TokenValue = result
         };
-        
+        LogTokenCreation(CurrentToken);
     }
 
     private void ParseKeywordToken(string codeSnippet)
     {
-        Token = new Token()
+        CurrentToken = new Token()
         {
             TokenType = TokenType.Keyword,
             TokenValue = codeSnippet
         };
+        LogTokenCreation(CurrentToken);
     }
     
     private static Queue<string> RemoveComments(IEnumerable<string> codeList)
@@ -319,5 +329,10 @@ public class Tokenizer : ITokenizer
             }
         }
         return result;
+    }
+
+    private void LogTokenCreation(Token token)
+    {
+        _logger.LogDebug($"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
     }
 }
