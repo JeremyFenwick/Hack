@@ -1,6 +1,5 @@
 ﻿using Compiler.Core.Enums;
 using Compiler.Core.Interfaces;
-using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core;
 
@@ -8,16 +7,16 @@ public class Tokenizer : ITokenizer
 {
     private Queue<string> _jackCode;
     private LinkedList<string> _currentLine;
-    private ILogger _logger;
-    private readonly List<char> _symbols =
+    // private ILogger _logger;
+    private readonly char[] _symbols =
     [
         '{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '|', '<', '>', '=', '~'
     ];
 
-    private readonly List<string> _keywords =
+    private readonly string[] _keywords =
     [
         "class", "constructor", "function", "method", "field", "static", "var",
-        "int", "char", "boolean", "void", "true", "false", "null", "this", "let",
+        "int", "char", "bool", "void", "true", "false", "null", "this", "let",
         "do", "if", "else", "while", "return"
     ];
 
@@ -25,11 +24,11 @@ public class Tokenizer : ITokenizer
     public Token CurrentToken { get; private set; } 
     public string CurrentLine => string.Join(" ", _currentLine);
 
-    public Tokenizer(IEnumerable<string> jackCode, ILogger logger)
+    public Tokenizer(IEnumerable<string> jackCode)
     {
         _currentLine = null!;
         CurrentToken = null!;
-        _logger = logger;
+        // _logger = logger;
         _jackCode = RemoveComments(jackCode);
         NextCodeLine();
     }
@@ -84,7 +83,7 @@ public class Tokenizer : ITokenizer
             return true;
         }
         
-        _logger.LogError($"Failed to identify code snipper {workingCodeSnippet}");
+        // _logger.LogError($"Failed to identify code snipper {workingCodeSnippet}");
         throw new Exception("Unknown case in the advance function");
     }
 
@@ -104,7 +103,7 @@ public class Tokenizer : ITokenizer
                 _currentLine.AddFirst(codeSnippet.Substring(i));  
                 break;
             }
-            _logger.LogError($"Illegal character while parsing identifier: {codeSnippet[i]}");
+            // _logger.LogError($"Illegal character while parsing identifier: {codeSnippet[i]}");
             throw new Exception("Illegal character found while parsing identifier");
         }
         CurrentToken = new Token()
@@ -138,7 +137,7 @@ public class Tokenizer : ITokenizer
             }
             if (i == codeSnippet.Length - 1 && codeSnippet[i] != '"')
             {
-                _logger.LogError($"String did not end with character \", instead found: {codeSnippet[i]}");
+                // _logger.LogError($"String did not end with character \", instead found: {codeSnippet[i]}");
                 throw new Exception("String parsing failure! String did not end with close quotes");
             }
             result += codeSnippet[i];
@@ -181,7 +180,7 @@ public class Tokenizer : ITokenizer
                 _currentLine.AddFirst(codeSnippet.Substring(i));   
                 break;
             }
-            _logger.LogError($"Illegal character found while parsing integer constant: {codeSnippet[i]}");
+            // _logger.LogError($"Illegal character found while parsing integer constant: {codeSnippet[i]}");
             throw new Exception("Illegal character found while parsing integer constant");
         }
         
@@ -335,6 +334,6 @@ public class Tokenizer : ITokenizer
 
     private void LogTokenCreation(Token token)
     {
-        _logger.LogDebug($"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
+        // _logger.LogDebug($"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
     }
 }

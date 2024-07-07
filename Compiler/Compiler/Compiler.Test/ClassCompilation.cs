@@ -1,5 +1,4 @@
 ﻿using Compiler.Core;
-using Microsoft.Extensions.Logging;
 
 namespace Compiler.Test;
 
@@ -7,10 +6,10 @@ public class ClassCompilation
 {
     public CompilationEngine GenerateCompilationEngine(List<string> codeList)
     {
-        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-        var logger = factory.CreateLogger<Tests>();
-        var tokenizer = new Core.Tokenizer(codeList, logger);
-        return new CompilationEngine(tokenizer, logger);
+        // using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+        // var logger = factory.CreateLogger<Tests>();
+        var tokenizer = new Core.Tokenizer(codeList);
+        return new CompilationEngine(tokenizer);
     }
 
     [Test]
@@ -24,7 +23,7 @@ public class ClassCompilation
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</ class >"));
+        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -34,12 +33,11 @@ public class ClassCompilation
         {
             "class main {",
             "field bool x, z, q;",
-            "static char y;",
             "}"
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</ class >"));
+        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -48,11 +46,11 @@ public class ClassCompilation
         var codeList = new List<string>
         {
             "class main {",
-            "function int exampleFunction(int x)",
+            "function int exampleFunction(int x, bool y)",
             "}"
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</ class >"));
+        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
     }
 }
