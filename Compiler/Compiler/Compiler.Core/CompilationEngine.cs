@@ -7,7 +7,7 @@ public class CompilationEngine
 {
     private ITokenizer _tokenizer;
     // private ILogger _logger;
-    private int _indentationLevel;
+    private byte _indentationLevel;
     private readonly List<string> _statementKeywords = ["let", "if", "while", "do", "return"];
     private readonly List<string> _ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="];
     
@@ -156,7 +156,7 @@ public class CompilationEngine
             {
                 break;
             }
-            StatementSplitter();
+            StatementSwitch();
         }
         _indentationLevel--;
         WriteXmlLine(true, "statements");
@@ -166,7 +166,7 @@ public class CompilationEngine
         WriteXmlLine(true, "subroutineBody");
     }
 
-    private void StatementSplitter() 
+    private void StatementSwitch() 
     {
         switch (CurrentToken.TokenValue)
         {
@@ -186,7 +186,7 @@ public class CompilationEngine
                 ReturnStatement();
                 break;
             default:
-                throw new Exception("Unknown statement type. Cannot be split");
+                throw new Exception("Unknown statement type");
         }
     }
     
@@ -194,12 +194,15 @@ public class CompilationEngine
     {
         WriteXmlLine(false, "returnStatement");
         _indentationLevel++;
+        
         TokenToXmlLine(CurrentToken, TokenType.Keyword, "return");
         // Handle the case where the return statement has an expression
         if (CurrentToken.TokenValue != ";")
         {
             Expression();
         }
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
+
         _indentationLevel--;
         WriteXmlLine(true, "returnStatement");
     }
@@ -207,22 +210,129 @@ public class CompilationEngine
     private void DoStatement()
     {
         WriteXmlLine(false, "doStatement");
+        _indentationLevel++;
+        
+        TokenToXmlLine(CurrentToken, TokenType.Keyword, "do");
+        // This function is LL(2) so we need to look ahead to know what to do
+        var lastToken = CurrentToken;
+        NextToken();
+
+        // Handle subroutine call. Inlined for clarity as separating creates a mess
+        if (lastToken.TokenValue == "(")
+        {
+            WriteXmlLine(false, "subRoutineCall");
+            _indentationLevel++;
+            TokenToXmlLine(lastToken, TokenType.Identifier);
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
+            ExpressionList();
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+            _indentationLevel--;
+            WriteXmlLine(true, "subRoutineCall");
+        }
+        // Handle alternate subroutine call
+        else
+        {
+            WriteXmlLine(false, "subRoutineCall");
+            _indentationLevel++;
+            TokenToXmlLine(lastToken, TokenType.Identifier);
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, ".");
+            TokenToXmlLine(CurrentToken, TokenType.Identifier);
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
+            ExpressionList();
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+            _indentationLevel--;
+            WriteXmlLine(true, "subRoutineCall");
+        }
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
+
+        _indentationLevel--;
         WriteXmlLine(true, "doStatement");
     }
 
     private void WhileStatement()
     {
-        throw new NotImplementedException();
+        WriteXmlLine(false, "whileStatement");
+        _indentationLevel++;
+
+        TokenToXmlLine(CurrentToken, TokenType.Keyword, "while");
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
+        Expression();
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
+        StatementSwitch();
+        while (true)
+        {
+            if (CurrentToken.TokenValue == "}")
+            {
+                break;
+            }
+            StatementSwitch();
+        }
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
+
+        _indentationLevel--;
+        WriteXmlLine(true, "whileStatement");
     }
 
     private void IfStatement()
     {
-        throw new NotImplementedException();
+        WriteXmlLine(false, "ifStatement");
+        _indentationLevel++;
+        
+        TokenToXmlLine(CurrentToken, TokenType.Keyword, "if");
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
+        Expression();
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
+        StatementSwitch();
+        while (true)
+        {
+            if (CurrentToken.TokenValue == "}")
+            {
+                break;
+            }
+            StatementSwitch();
+        }
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
+        if (CurrentToken.TokenValue == "else")
+        {
+            TokenToXmlLine(CurrentToken, TokenType.Keyword, "else");
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
+            StatementSwitch();
+            while (true)
+            {
+                if (CurrentToken.TokenValue == "}")
+                {
+                    break;
+                }
+                StatementSwitch();
+            }
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
+        }
+        
+        _indentationLevel--;
+        WriteXmlLine(true, "ifStatement");       
     }
 
     private void LetStatement()
     {
-        throw new NotImplementedException();
+        WriteXmlLine(false, "letStatement");
+        _indentationLevel++;
+        
+        TokenToXmlLine(CurrentToken, TokenType.Keyword, "let");
+        TokenToXmlLine(CurrentToken, TokenType.Identifier);
+        if (CurrentToken.TokenValue == "[")
+        {
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, "[");
+            Expression();
+            TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
+        }
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, "=");
+        Expression();
+        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
+        
+        _indentationLevel--;
+        WriteXmlLine(true, "letStatement");        
     }
     
     private void Expression()
@@ -253,10 +363,12 @@ public class CompilationEngine
         // This function is LL(2) so we need to look ahead to know what to do
         var lastToken = CurrentToken;
         NextToken();
+        // Handle integer constant
         if (lastToken.TokenType == TokenType.IntConst)
         {
             TokenToXmlLine(lastToken, TokenType.IntConst);
         } 
+        // Handle string constant
         else if (lastToken.TokenType == TokenType.StringConst)
         {
             TokenToXmlLine(lastToken, TokenType.StringConst);
@@ -286,7 +398,7 @@ public class CompilationEngine
             Expression();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
         }
-        // Handle subroutine call. Inlined for clarity
+        // Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
         {
             WriteXmlLine(false, "subRoutineCall");
@@ -298,14 +410,14 @@ public class CompilationEngine
             _indentationLevel--;
             WriteXmlLine(true, "subRoutineCall");
         }
-        // Handle alternate subroutine call. Inlined for clarity
+        // Handle alternate subroutine call
         else if (CurrentToken.TokenValue == ".")
         {
             WriteXmlLine(false, "subRoutineCall");
             _indentationLevel++;
             TokenToXmlLine(lastToken, TokenType.Identifier);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ".");
-            TokenToXmlLine(lastToken, TokenType.Identifier);
+            TokenToXmlLine(CurrentToken, TokenType.Identifier);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
             ExpressionList();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
@@ -323,7 +435,25 @@ public class CompilationEngine
 
     private void ExpressionList()
     {
-        throw new NotImplementedException();
+        WriteXmlLine(false, "expressionList");
+        _indentationLevel++;
+
+        if (CurrentToken.TokenValue != ")")
+        {
+            while (true)
+            {
+                Expression();
+                if (CurrentToken.TokenValue == ",")
+                {
+                    TokenToXmlLine(CurrentToken, TokenType.Symbol, ",");
+                    continue;
+                }
+                break;
+            }
+        }
+        
+        _indentationLevel--;
+        WriteXmlLine(false, "expressionList");
     }
 
     private void SubroutineVariableDeclaration()
