@@ -46,7 +46,27 @@ public class ClassCompilation
         var codeList = new List<string>
         {
             "class main {",
-            "function int exampleFunction(int x, bool y)",
+            "function int exampleFunction(int x, bool y) " +
+            "   {" +
+            "   }",
+            "}"
+        };
+        var compilationEngine = GenerateCompilationEngine(codeList);
+        compilationEngine.BeginCompilationRoutine();
+        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+    }
+    
+    [Test]
+    public void SimpleClassWithVariableDeclaration()
+    {
+        var codeList = new List<string>
+        {
+            "class main {",
+            "function int exampleFunction(int x, bool y) " +
+            "   {" +
+            "       var bool x;" +
+            "       var int y, z;" +
+            "   }",
             "}"
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
