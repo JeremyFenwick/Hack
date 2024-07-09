@@ -17,11 +17,11 @@ public class Tests
     {
         var codeList = new List<string>();
         codeList.Add("// First test comment");
-        codeList.Add("let x = 100;");
+        codeList.Add("let x = 100 ;");
 
         var tokenizer = SetupTokenizer(codeList);
 
-        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
+        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100 ;"));
     }
     
     [Test]
@@ -32,7 +32,7 @@ public class Tests
         codeList.Add("let x = 100;");
 
         var tokenizer = SetupTokenizer(codeList);
-        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
+        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100 ;"));
     }
     
     [Test]
@@ -46,7 +46,7 @@ public class Tests
 
         var tokenizer = SetupTokenizer(codeList);
 
-        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
+        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100 ;"));
     }
     
     [Test]
@@ -58,7 +58,7 @@ public class Tests
         codeList.Add("Third test comment */let x = 100;");
 
         var tokenizer = SetupTokenizer(codeList);
-        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
+        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100 ;"));
     }
     
     [Test]
@@ -70,7 +70,7 @@ public class Tests
         codeList.Add("Third test comment */let y = 200;");
 
         var tokenizer = SetupTokenizer(codeList);
-        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100;"));
+        Assert.That(tokenizer.CurrentLine, Is.EquivalentTo("let x = 100 ;"));
     }
     
     [Test]

@@ -4,7 +4,7 @@ namespace Compiler.Test;
 
 public class ClassCompilation
 {
-    public CompilationEngine GenerateCompilationEngine(List<string> codeList)
+    private CompilationEngine GenerateCompilationEngine(List<string> codeList)
     {
         // using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
         // var logger = factory.CreateLogger<Tests>();

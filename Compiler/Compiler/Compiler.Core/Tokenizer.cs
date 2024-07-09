@@ -97,12 +97,7 @@ public class Tokenizer : ITokenizer
                 result += codeSnippet[i];
                 continue;
             }
-
-            if (_symbols.Contains(codeSnippet[i]))
-            {
-                _currentLine.AddFirst(codeSnippet.Substring(i));  
-                break;
-            }
+            
             // _logger.LogError($"Illegal character while parsing identifier: {codeSnippet[i]}");
             throw new Exception("Illegal character found while parsing identifier");
         }
@@ -124,13 +119,6 @@ public class Tokenizer : ITokenizer
             {
                 break;
             }
-            // If we are at the end of the string token but there is more code, add the leftover code back
-            if (codeSnippet[i] == '"' && i < codeSnippet.Length - 1)
-            {
-                _currentLine.AddFirst(codeSnippet.Substring(i + 1));  
-                break;
-            }
-            // If there is a newline skip both characters. Note the out-of-bounds check in the middle
             if (codeSnippet[i] == '\n' && i <= codeSnippet.Length - 1)
             {
                 continue;
@@ -158,11 +146,6 @@ public class Tokenizer : ITokenizer
             TokenValue = codeSnippet[0].ToString()
         };
         LogTokenCreation(CurrentToken);
-
-        if (codeSnippet.Length > 1)
-        {
-            _currentLine.AddFirst(codeSnippet.Substring(1));  
-        }
     }
     
     private void ParseIntegerConstantToken(string codeSnippet)
@@ -174,11 +157,6 @@ public class Tokenizer : ITokenizer
             {
                 result += codeSnippet[i];
                 continue;
-            }
-            if (_symbols.Contains(codeSnippet[i]))
-            {
-                _currentLine.AddFirst(codeSnippet.Substring(i));   
-                break;
             }
             // _logger.LogError($"Illegal character found while parsing integer constant: {codeSnippet[i]}");
             throw new Exception("Illegal character found while parsing integer constant");
@@ -318,7 +296,15 @@ public class Tokenizer : ITokenizer
             }
             if (codeLine[i] == ' ' && !insideQuotes)
             {
-                result.AddLast(workingString);
+                if (!string.IsNullOrEmpty(workingString)) result.AddLast(workingString);
+                workingString = "";
+                continue;
+            }
+            // Symbols need to be separated out
+            if (_symbols.Contains(codeLine[i]) && !insideQuotes)
+            {
+                if (!string.IsNullOrEmpty(workingString)) result.AddLast(workingString);
+                result.AddLast(codeLine[i].ToString());
                 workingString = "";
                 continue;
             }
@@ -326,7 +312,7 @@ public class Tokenizer : ITokenizer
             // If we are at the end, add what is left
             if (i == codeLine.Length - 1)
             {
-                result.AddLast(workingString);
+                if (!string.IsNullOrEmpty(workingString)) result.AddLast(workingString);
             }
         }
         return result;
