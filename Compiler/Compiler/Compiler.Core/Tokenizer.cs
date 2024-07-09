@@ -319,7 +319,7 @@ public class Tokenizer : ITokenizer
 
     private void LogTokenCreation(Token token)
     {
-        _logger.LogInformation("TOKENIZER: " +  $"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
+        _logger.LogTrace("TOKENIZER: " +  $"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
     }
     
     private void TerminateTokenizer(string message)

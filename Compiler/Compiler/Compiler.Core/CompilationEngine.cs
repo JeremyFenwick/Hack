@@ -127,9 +127,10 @@ public class CompilationEngine
         // )
         TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
         
+        SubroutineBody();
+        
         _indentationLevel--;
         WriteXmlLine(true, "subroutineDeclaration");
-        SubroutineBody();
     }
 
     private void SubroutineBody()
@@ -148,46 +149,50 @@ public class CompilationEngine
             SubroutineVariableDeclaration();
         }
         // Handle statements
-        WriteXmlLine(false, "statements");
-        _indentationLevel++;
-        while (true)
+        
+        if (_statementKeywords.Contains(CurrentToken.TokenValue))
         {
-            if (!_statementKeywords.Contains(CurrentToken.TokenValue))
-            {
-                break;
-            }
-            StatementSwitch();
+            StatementLoop();
         }
-        _indentationLevel--;
-        WriteXmlLine(true, "statements");
-
+        
         TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
         _indentationLevel--;
         WriteXmlLine(true, "subroutineBody");
     }
 
-    private void StatementSwitch() 
+    private void StatementLoop() 
     {
-        switch (CurrentToken.TokenValue)
+        WriteXmlLine(false, "statements");
+        _indentationLevel++;
+        
+        do
         {
-            case "let":
-                LetStatement();
-                break;
-            case "if":
-                IfStatement();
-                break;
-            case "while":
-                WhileStatement();
-                break;
-            case "do":
-                DoStatement();
-                break;
-            case "return":
-                ReturnStatement();
-                break;
-            default:
-                throw new Exception("Unknown statement type");
-        }
+            switch (CurrentToken.TokenValue)
+            {
+                case "let":
+                    LetStatement();
+                    break;
+                case "if":
+                    IfStatement();
+                    break;
+                case "while":
+                    WhileStatement();
+                    break;
+                case "do":
+                    DoStatement();
+                    break;
+                case "return":
+                    ReturnStatement();
+                    break;
+                default:
+                    throw new Exception("Unknown statement type");
+            }
+            if (CurrentToken.TokenValue == "}") break;
+            
+        } while (true);
+            
+        _indentationLevel--;
+        WriteXmlLine(true, "statements");
     }
     
     private void ReturnStatement()
@@ -255,15 +260,9 @@ public class CompilationEngine
         Expression();
         TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
         TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
-        StatementSwitch();
-        while (true)
-        {
-            if (CurrentToken.TokenValue == "}")
-            {
-                break;
-            }
-            StatementSwitch();
-        }
+        
+        StatementLoop();
+
         TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
 
         _indentationLevel--;
@@ -280,29 +279,17 @@ public class CompilationEngine
         Expression();
         TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
         TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
-        StatementSwitch();
-        while (true)
-        {
-            if (CurrentToken.TokenValue == "}")
-            {
-                break;
-            }
-            StatementSwitch();
-        }
+        
+        StatementLoop();
+
         TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
         if (CurrentToken.TokenValue == "else")
         {
             TokenToXmlLine(CurrentToken, TokenType.Keyword, "else");
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
-            StatementSwitch();
-            while (true)
-            {
-                if (CurrentToken.TokenValue == "}")
-                {
-                    break;
-                }
-                StatementSwitch();
-            }
+            
+            StatementLoop();
+
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
         }
         
@@ -441,7 +428,7 @@ public class CompilationEngine
         }
         
         _indentationLevel--;
-        WriteXmlLine(false, "expressionList");
+        WriteXmlLine(true, "expressionList");
     }
 
     private void SubroutineVariableDeclaration()
@@ -531,7 +518,6 @@ public class CompilationEngine
     private void NextToken()
     {
         _tokenizer.Advance();
-        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         CurrentToken = _tokenizer.CurrentToken;
     }
 
