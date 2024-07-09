@@ -123,7 +123,7 @@ public class CompilationEngine
             }
         }
         _indentationLevel--;
-        WriteXmlLine(false, "parameterList");
+        WriteXmlLine(true, "parameterList");
         // )
         TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
         
@@ -220,28 +220,24 @@ public class CompilationEngine
         // Handle subroutine call. Inlined for clarity as separating creates a mess
         if (CurrentToken.TokenValue == "(")
         {
-            WriteXmlLine(false, "subRoutineCall");
-            _indentationLevel++;
+
             TokenToXmlLine(lastToken, false);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
             ExpressionList();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-            _indentationLevel--;
-            WriteXmlLine(true, "subRoutineCall");
+
         }
         // Handle alternate subroutine call
         else
         {
-            WriteXmlLine(false, "subRoutineCall");
-            _indentationLevel++;
+
             TokenToXmlLine(lastToken, false);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ".");
             TokenToXmlLine(CurrentToken, TokenType.Identifier);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
             ExpressionList();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-            _indentationLevel--;
-            WriteXmlLine(true, "subRoutineCall");
+
         }
         TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
 
@@ -371,7 +367,7 @@ public class CompilationEngine
         // Handle string constant
         else if (lastToken.TokenType == TokenType.StringConst)
         {
-            TokenToXmlLine(lastToken, TokenType.StringConst);
+            TokenToXmlLine(lastToken, false);
         }
         // Handle nested expression
         else if (lastToken.TokenValue == "(")
@@ -401,28 +397,20 @@ public class CompilationEngine
         // Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
         {
-            WriteXmlLine(false, "subRoutineCall");
-            _indentationLevel++;
             TokenToXmlLine(lastToken, false);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
             ExpressionList();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-            _indentationLevel--;
-            WriteXmlLine(true, "subRoutineCall");
         }
         // Handle alternate subroutine call
         else if (CurrentToken.TokenValue == ".")
         {
-            WriteXmlLine(false, "subRoutineCall");
-            _indentationLevel++;
             TokenToXmlLine(lastToken, false);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ".");
             TokenToXmlLine(CurrentToken, TokenType.Identifier);
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
             ExpressionList();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-            _indentationLevel--;
-            WriteXmlLine(true, "subRoutineCall");
         }
         // Handle the varName case
         else
@@ -489,10 +477,8 @@ public class CompilationEngine
             TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected: {expectedValue}, Actual: {token.TokenValue}");
         }
 
-        var indentationSpacing = new string('\t', _indentationLevel);
-        var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
-        XmlLines.AddLast(resultingString);
-        
+        XmlLines.AddLast(XmlFormatter(token));
+        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         NextToken();
     }
     
@@ -507,11 +493,8 @@ public class CompilationEngine
             TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected in: {string.Join("", expectedValues)}, Actual: {token.TokenValue}");
         }
 
-        var indentationSpacing = new string('\t', _indentationLevel);
-        var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
-        XmlLines.AddLast(resultingString);
+        XmlLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-
         NextToken();
     }
     
@@ -522,29 +505,21 @@ public class CompilationEngine
             throw new Exception($"Token - {token.TokenValue} did not have the expected Tokentype. Expected: {expectedTokenType}, Actual: {token.TokenType}");
         }
 
-        var indentationSpacing = new string('\t', _indentationLevel);
-        var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
-        XmlLines.AddLast(resultingString);
+        XmlLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-
         NextToken();
     }
 
     private void TokenToXmlLine(Token token)
     {
-        var indentationSpacing = new string('\t', _indentationLevel);
-        var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
-        XmlLines.AddLast(resultingString);
+        XmlLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-
         NextToken();
     }
     
     private void TokenToXmlLine(Token token, bool advanceToken)
     {
-        var indentationSpacing = new string('\t', _indentationLevel);
-        var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
-        XmlLines.AddLast(resultingString);
+        XmlLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
 
         if (advanceToken)
@@ -556,6 +531,7 @@ public class CompilationEngine
     private void NextToken()
     {
         _tokenizer.Advance();
+        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         CurrentToken = _tokenizer.CurrentToken;
     }
 
@@ -571,5 +547,11 @@ public class CompilationEngine
         _logger.LogCritical("COMPILATION ENGINE: " + message);
         Console.ReadLine();
         Environment.Exit(1);
+    }
+
+    private string XmlFormatter(Token token)
+    {
+        var indentationSpacing = new string('\t', _indentationLevel);
+        return $"{indentationSpacing}<{token.TokenType.ToString().ToLower()}> {token.TokenValue} </{token.TokenType.ToString().ToLower()}>";
     }
 }
