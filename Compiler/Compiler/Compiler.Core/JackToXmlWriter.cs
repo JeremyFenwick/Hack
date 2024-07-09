@@ -1,9 +1,13 @@
-﻿namespace Compiler.Core;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+
+namespace Compiler.Core;
 
 public class JackToXmlWriter
 {
     private string _fileOrDirectory;
     private bool _fileMode = false;
+    private IConfigurationRoot _config;
 
     public JackToXmlWriter(string fileOrDirectory)
     {
@@ -12,6 +16,12 @@ public class JackToXmlWriter
         {
             _fileMode = true;
         }
+        
+        // Read the app settings file, you can add secrets and additional files here
+        _config = new ConfigurationBuilder()
+            .AddJsonFile($"appsettings.json")
+            .Build();
+
     }
     public void GenerateXml()
     {
@@ -41,9 +51,13 @@ public class JackToXmlWriter
         {
             throw new Exception(e.Message);
         }
+        // Create the logger
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()
+            .AddConfiguration(_config.GetSection("Logging")));
+        var logger = factory.CreateLogger<JackToXmlWriter>();
         // Now generate the xml file
-        var tokenizer = new Tokenizer(rawVmCode);
-        var compilationEngine = new CompilationEngine(tokenizer);
+        var tokenizer = new Tokenizer(rawVmCode, logger);
+        var compilationEngine = new CompilationEngine(tokenizer, logger);
         compilationEngine.BeginCompilationRoutine();
         
         using var streamWriter = File.AppendText(outputFile);

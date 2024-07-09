@@ -1,4 +1,5 @@
 ﻿using Compiler.Core;
+using Microsoft.Extensions.Logging;
 
 namespace Compiler.Test;
 
@@ -6,10 +7,10 @@ public class ClassCompilation
 {
     private CompilationEngine GenerateCompilationEngine(List<string> codeList)
     {
-        // using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-        // var logger = factory.CreateLogger<Tests>();
-        var tokenizer = new Core.Tokenizer(codeList);
-        return new CompilationEngine(tokenizer);
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+        var logger = factory.CreateLogger<Tests>();
+        var tokenizer = new Core.Tokenizer(codeList, logger);
+        return new CompilationEngine(tokenizer, logger);
     }
 
     [Test]

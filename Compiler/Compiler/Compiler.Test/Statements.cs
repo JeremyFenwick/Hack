@@ -1,4 +1,5 @@
 ﻿using Compiler.Core;
+using Microsoft.Extensions.Logging;
 
 namespace Compiler.Test;
 
@@ -6,10 +7,10 @@ public class Statements
 {
     private CompilationEngine GenerateCompilationEngine(List<string> codeList)
     {
-        // using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-        // var logger = factory.CreateLogger<Tests>();
-        var tokenizer = new Core.Tokenizer(codeList);
-        return new CompilationEngine(tokenizer);
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+        var logger = factory.CreateLogger<Tests>();
+        var tokenizer = new Core.Tokenizer(codeList, logger);
+        return new CompilationEngine(tokenizer, logger);
     }
 
     [Test]
@@ -130,6 +131,22 @@ public class Statements
             "    function void main() {",
             "        let x = 100;",
             "        let y[100] = x > 150;",
+            "        return x;",
+            "    }",
+            "}"
+        };
+        var compilationEngine = GenerateCompilationEngine(codeList);
+        compilationEngine.BeginCompilationRoutine();
+        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+    }
+    [Test]
+    public void LetStringStatementTest()
+    {
+        var codeList = new List<string>
+        {
+            "class main {",
+            "    function void main() {",
+            "        let x = \"HELLO WORLD\";",
             "        return x;",
             "    }",
             "}"

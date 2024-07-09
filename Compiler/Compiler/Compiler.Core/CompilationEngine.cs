@@ -1,12 +1,13 @@
 ﻿using Compiler.Core.Enums;
 using Compiler.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core;
 
 public class CompilationEngine
 {
     private ITokenizer _tokenizer;
-    // private ILogger _logger;
+    private ILogger _logger;
     private byte _indentationLevel;
     private readonly List<string> _statementKeywords = ["let", "if", "while", "do", "return"];
     private readonly List<string> _ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="];
@@ -14,9 +15,9 @@ public class CompilationEngine
     public Token CurrentToken { get; private set; }
     public LinkedList<string> XmlLines { get; private set; }
     
-    public CompilationEngine(ITokenizer tokenizer)
+    public CompilationEngine(ITokenizer tokenizer, ILogger logger)
     {
-        // _logger = logger;
+        _logger = logger;
         _tokenizer = tokenizer;
         XmlLines = new LinkedList<string>();
         _indentationLevel = 0;
@@ -97,7 +98,7 @@ public class CompilationEngine
         // function
         TokenToXmlLine(CurrentToken, TokenType.Keyword, ["constructor", "function", "method"]);
         // void
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, ["int", "bool", "char", "void"]);
+        TokenToXmlLine(CurrentToken);
         // exampleFunction
         TokenToXmlLine(CurrentToken, TokenType.Identifier);
         // (
@@ -109,7 +110,7 @@ public class CompilationEngine
         {
             if (CurrentToken.TokenValue != ")")
             {
-                TokenToXmlLine(CurrentToken, TokenType.Keyword, ["int", "bool", "char"]);
+                TokenToXmlLine(CurrentToken);
                 TokenToXmlLine(CurrentToken, TokenType.Identifier);
             }
             if (CurrentToken.TokenValue == ",")
@@ -461,7 +462,7 @@ public class CompilationEngine
         _indentationLevel++;
         
         TokenToXmlLine(CurrentToken, TokenType.Keyword, "var");
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, ["int", "bool", "char"]);
+        TokenToXmlLine(CurrentToken);
         do
         {
             TokenToXmlLine(CurrentToken, TokenType.Identifier);
@@ -481,11 +482,11 @@ public class CompilationEngine
     {
         if (token.TokenType != expectedTokenType)
         {
-            throw new Exception($"Token - {token.TokenValue} did not have the expected TokenType. Expected: {expectedTokenType}, Actual: {token.TokenType}");
+            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenType. Expected: {expectedTokenType}, Actual: {token.TokenType}");
         }
         if (expectedValue != token.TokenValue)
         {
-            throw new Exception($"Token - {token.TokenValue} did not have the expected TokenValue. Expected: {expectedValue}, Actual: {token.TokenValue}");
+            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected: {expectedValue}, Actual: {token.TokenValue}");
         }
 
         var indentationSpacing = new string('\t', _indentationLevel);
@@ -499,17 +500,18 @@ public class CompilationEngine
     {
         if (token.TokenType != expectedTokenType)
         {
-            throw new Exception($"Token - {token.TokenValue} did not have the expected Tokentype. Expected: {expectedTokenType}, Actual: {token.TokenType}");
+            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected Tokentype. Expected: {expectedTokenType}, Actual: {token.TokenType}");
         }
         if (!expectedValues.Contains(token.TokenValue))
         {
-            throw new Exception($"Token - {token.TokenValue} did not have the expected TokenValue. Expected in: {string.Join("", expectedValues)}, Actual: {token.TokenValue}");
+            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected in: {string.Join("", expectedValues)}, Actual: {token.TokenValue}");
         }
 
         var indentationSpacing = new string('\t', _indentationLevel);
         var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
         XmlLines.AddLast(resultingString);
-        
+        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
+
         NextToken();
     }
     
@@ -523,7 +525,8 @@ public class CompilationEngine
         var indentationSpacing = new string('\t', _indentationLevel);
         var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
         XmlLines.AddLast(resultingString);
-        
+        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
+
         NextToken();
     }
 
@@ -532,7 +535,8 @@ public class CompilationEngine
         var indentationSpacing = new string('\t', _indentationLevel);
         var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
         XmlLines.AddLast(resultingString);
-        
+        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
+
         NextToken();
     }
     
@@ -541,6 +545,7 @@ public class CompilationEngine
         var indentationSpacing = new string('\t', _indentationLevel);
         var resultingString = $"{indentationSpacing}<{token.TokenType}> {token.TokenValue} </{token.TokenType}>";
         XmlLines.AddLast(resultingString);
+        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
 
         if (advanceToken)
         {
@@ -558,11 +563,13 @@ public class CompilationEngine
     {
         var indentationSpacing = new string('\t', _indentationLevel);
         XmlLines.AddLast(!closingTag ? $"{indentationSpacing}<{line}>" : $"{indentationSpacing}</{line}>");
+        _logger.LogDebug($"Adding token to xml line: {CurrentToken.TokenValue}");
     }
 
-    private void TerminateCompilationRoutine()
+    private void TerminateCompilationRoutine(string message)
     {
-        // _logger.LogCritical("Encountered an unrecoverable error. Exiting...");
-        // Environment.Exit(1);
+        _logger.LogCritical("COMPILATION ENGINE: " + message);
+        Console.ReadLine();
+        Environment.Exit(1);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Compiler.Core.Enums;
 using Compiler.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core;
 
@@ -7,7 +8,7 @@ public class Tokenizer : ITokenizer
 {
     private Queue<string> _jackCode;
     private LinkedList<string> _currentLine;
-    // private ILogger _logger;
+    private ILogger _logger;
     private readonly char[] _symbols =
     [
         '{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '|', '<', '>', '=', '~'
@@ -24,8 +25,9 @@ public class Tokenizer : ITokenizer
     public Token CurrentToken { get; private set; } 
     public string CurrentLine => string.Join(" ", _currentLine);
 
-    public Tokenizer(IEnumerable<string> jackCode)
+    public Tokenizer(IEnumerable<string> jackCode, ILogger logger)
     {
+        _logger = logger;
         _currentLine = null!;
         CurrentToken = null!;
         // _logger = logger;
@@ -83,8 +85,8 @@ public class Tokenizer : ITokenizer
             return true;
         }
         
-        // _logger.LogError($"Failed to identify code snipper {workingCodeSnippet}");
-        throw new Exception("Unknown case in the advance function");
+        TerminateTokenizer("Unknown case in the advance function");
+        return false;
     }
 
     private void ParseIdentifierToken(string codeSnippet)
@@ -98,8 +100,7 @@ public class Tokenizer : ITokenizer
                 continue;
             }
             
-            // _logger.LogError($"Illegal character while parsing identifier: {codeSnippet[i]}");
-            throw new Exception("Illegal character found while parsing identifier");
+            TerminateTokenizer($"Illegal character while parsing identifier: {codeSnippet[i]}");
         }
         CurrentToken = new Token()
         {
@@ -125,8 +126,7 @@ public class Tokenizer : ITokenizer
             }
             if (i == codeSnippet.Length - 1 && codeSnippet[i] != '"')
             {
-                // _logger.LogError($"String did not end with character \", instead found: {codeSnippet[i]}");
-                throw new Exception("String parsing failure! String did not end with close quotes");
+                TerminateTokenizer($"String did not end with character \", instead found: {codeSnippet[i]}");
             }
             result += codeSnippet[i];
         }
@@ -158,8 +158,7 @@ public class Tokenizer : ITokenizer
                 result += codeSnippet[i];
                 continue;
             }
-            // _logger.LogError($"Illegal character found while parsing integer constant: {codeSnippet[i]}");
-            throw new Exception("Illegal character found while parsing integer constant");
+            TerminateTokenizer("TOKENIZER: " +  $"Illegal character found while parsing integer constant: {codeSnippet[i]}");
         }
         
         CurrentToken = new Token()
@@ -320,6 +319,13 @@ public class Tokenizer : ITokenizer
 
     private void LogTokenCreation(Token token)
     {
-        // _logger.LogDebug($"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
+        _logger.LogDebug("TOKENIZER: " +  $"Created token - Token Type: {token.TokenType}, Token Value: {token.TokenValue}");
+    }
+    
+    private void TerminateTokenizer(string message)
+    {
+        _logger.LogCritical("TOKENIZER: " + message);
+        Console.ReadLine();
+        Environment.Exit(1);
     }
 }
