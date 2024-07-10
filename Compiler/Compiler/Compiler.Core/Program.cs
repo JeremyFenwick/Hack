@@ -1,6 +1,7 @@
 ﻿// Arg1 is the input file (it must be a vm file)
 
 using Compiler.Core;
+using Compiler.Core.SyntaxAnalyzer;
 
 string selectedString;
 try
@@ -30,6 +31,6 @@ if (Path.GetExtension(selectedString) != ".jack" && Path.GetExtension(selectedSt
     Environment.Exit(1);
 }
 
-// Feed the selected string into the vm read writer
+// Feed the selected string into the xml read writer
 var xmlWriter = new JackToXmlWriter(selectedString);
 xmlWriter.GenerateXml();

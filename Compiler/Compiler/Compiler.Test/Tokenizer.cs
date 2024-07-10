@@ -6,11 +6,11 @@ namespace Compiler.Test;
 
 public class Tokenizer
 {
-    public Core.Tokenizer SetupTokenizer(List<string> codeList)
+    public Core.SyntaxAnalyzer.Tokenizer SetupTokenizer(List<string> codeList)
     {
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = factory.CreateLogger<Tests>();
-        var tokenizer = new Core.Tokenizer(codeList, logger);
+        var tokenizer = new Core.SyntaxAnalyzer.Tokenizer(codeList, logger);
         return tokenizer;
     }
     

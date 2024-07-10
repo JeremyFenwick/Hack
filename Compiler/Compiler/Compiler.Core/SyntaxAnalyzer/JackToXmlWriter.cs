@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Compiler.Core;
+namespace Compiler.Core.SyntaxAnalyzer;
 
 public class JackToXmlWriter
 {
@@ -82,14 +82,6 @@ public class JackToXmlWriter
         // var outputFile = $"{_fileOrDirectory}\\{new DirectoryInfo(_fileOrDirectory).Name}.asm";
         // var newFs = File.Create(outputFile);
         // newFs.Close();
-        // // Bootstrap the asm code to set the stack pointer
-        // var bootstrapWriter = File.AppendText(outputFile);
-        // bootstrapWriter.WriteLine("// SP = 256");
-        // bootstrapWriter.WriteLine("@256");
-        // bootstrapWriter.WriteLine("D=A");
-        // bootstrapWriter.WriteLine("@SP");
-        // bootstrapWriter.WriteLine("M=D");
-        // bootstrapWriter.Close();
         // // Add the Sys.vm to the raw code first
         // rawVmCode.Add("Sys", File.ReadLines(_fileOrDirectory + "\\Sys.vm").ToList()); 
         // // Bootstrap the vm code

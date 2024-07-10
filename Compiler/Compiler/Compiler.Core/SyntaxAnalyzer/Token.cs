@@ -1,6 +1,6 @@
 ﻿using Compiler.Core.Enums;
 
-namespace Compiler.Core;
+namespace Compiler.Core.SyntaxAnalyzer;
 
 public class Token
 {

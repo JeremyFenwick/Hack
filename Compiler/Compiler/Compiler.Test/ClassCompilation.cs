@@ -1,4 +1,5 @@
 ﻿using Compiler.Core;
+using Compiler.Core.SyntaxAnalyzer;
 using Microsoft.Extensions.Logging;
 
 namespace Compiler.Test;
@@ -9,7 +10,7 @@ public class ClassCompilation
     {
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = factory.CreateLogger<Tests>();
-        var tokenizer = new Core.Tokenizer(codeList, logger);
+        var tokenizer = new Core.SyntaxAnalyzer.Tokenizer(codeList, logger);
         return new CompilationEngine(tokenizer, logger);
     }
 

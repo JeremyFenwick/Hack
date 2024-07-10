@@ -1,4 +1,5 @@
 ﻿using Compiler.Core.Enums;
+using Compiler.Core.SyntaxAnalyzer;
 
 namespace Compiler.Core.Interfaces;
 

@@ -2,7 +2,7 @@
 using Compiler.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace Compiler.Core;
+namespace Compiler.Core.SyntaxAnalyzer;
 
 public class CompilationEngine
 {
