@@ -7,21 +7,16 @@ public class JackToXmlWriter
 {
     private string _fileOrDirectory;
     private bool _fileMode = false;
-    private IConfigurationRoot _config;
+    private ILogger _logger;
 
-    public JackToXmlWriter(string fileOrDirectory)
+    public JackToXmlWriter(string fileOrDirectory, ILogger logger)
     {
+        _logger = logger;
         _fileOrDirectory = fileOrDirectory;
         if (fileOrDirectory.EndsWith(".jack"))
         {
             _fileMode = true;
         }
-        
-        // Read the app settings file, you can add secrets and additional files here
-        _config = new ConfigurationBuilder()
-            .AddJsonFile($"appsettings.json")
-            .Build();
-
     }
     public void GenerateXml()
     {
@@ -51,13 +46,9 @@ public class JackToXmlWriter
         {
             throw new Exception(e.Message);
         }
-        // Create the logger
-        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()
-            .AddConfiguration(_config.GetSection("Logging")));
-        var logger = factory.CreateLogger<JackToXmlWriter>();
         // Now generate the xml file
-        var tokenizer = new Tokenizer(rawVmCode, logger);
-        var compilationEngine = new CompilationEngine(tokenizer, logger);
+        var tokenizer = new Tokenizer(rawVmCode, _logger);
+        var compilationEngine = new CompilationEngine(tokenizer, _logger);
         compilationEngine.BeginCompilationRoutine();
         
         using var streamWriter = File.AppendText(outputFile);
@@ -71,13 +62,9 @@ public class JackToXmlWriter
     {
         var fileList = Directory.GetFiles(_fileOrDirectory);
         
-        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()
-            .AddConfiguration(_config.GetSection("Logging")));
-        var logger = factory.CreateLogger<JackToXmlWriter>();
-        
         foreach (var file in fileList)
         {
-            logger.LogInformation($"Parsing file: {file}");
+            _logger.LogInformation($"Parsing file: {file}");
             List<string> rawVmCode;
             if (Path.GetExtension(file) != ".jack") continue;
             // Attempt to load the file
@@ -94,8 +81,8 @@ public class JackToXmlWriter
             var newFs = File.Create(outputFile);
             newFs.Close();
             // Now generate the xml file
-            var tokenizer = new Tokenizer(rawVmCode, logger);
-            var compilationEngine = new CompilationEngine(tokenizer, logger);
+            var tokenizer = new Tokenizer(rawVmCode, _logger);
+            var compilationEngine = new CompilationEngine(tokenizer, _logger);
             compilationEngine.BeginCompilationRoutine();
         
             using var streamWriter = File.AppendText(outputFile);

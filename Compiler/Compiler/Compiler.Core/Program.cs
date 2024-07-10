@@ -2,6 +2,8 @@
 
 using Compiler.Core;
 using Compiler.Core.SyntaxAnalyzer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 string selectedString;
 try
@@ -30,7 +32,14 @@ if (Path.GetExtension(selectedString) != ".jack" && Path.GetExtension(selectedSt
     Console.WriteLine("The input file extension must be a jack file (.jack) or directory!");
     Environment.Exit(1);
 }
-
+// Read the app settings file, you can add secrets and additional files here
+var config = new ConfigurationBuilder()
+    .AddJsonFile($"appsettings.json")
+    .Build();
+// Create the logger
+using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()
+    .AddConfiguration(config.GetSection("Logging")));
+var logger = factory.CreateLogger<JackToXmlWriter>();
 // Feed the selected string into the xml read writer
-var xmlWriter = new JackToXmlWriter(selectedString);
+var xmlWriter = new JackToXmlWriter(selectedString, logger);
 xmlWriter.GenerateXml();
