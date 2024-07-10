@@ -26,7 +26,8 @@ if (string.IsNullOrEmpty(selectedString))
 // Check the file extension
 if (Path.GetExtension(selectedString) != ".jack" && Path.GetExtension(selectedString) != string.Empty)
 {
-    throw new Exception("The input file extension must be a jack file (.jack) or directory!");
+    Console.WriteLine("The input file extension must be a jack file (.jack) or directory!");
+    Environment.Exit(1);
 }
 
 // Feed the selected string into the vm read writer
