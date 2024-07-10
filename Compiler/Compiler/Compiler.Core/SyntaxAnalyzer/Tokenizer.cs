@@ -11,7 +11,7 @@ public class Tokenizer : ITokenizer
     private ILogger _logger;
     private readonly char[] _symbols =
     [
-        '{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '|', '<', '>', '=', '~'
+        '{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '|', '&', '<', '>', '=', '~'
     ];
 
     private readonly string[] _keywords =

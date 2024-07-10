@@ -367,6 +367,7 @@ public class CompilationEngine
         else if (lastToken.TokenValue is "~" or "-")
         {
             TokenToXmlLine(lastToken, false);
+            Term();
         }
         // Handle keyword constant
         else if (lastToken.TokenValue is "true" or "false" or "null" or "this")

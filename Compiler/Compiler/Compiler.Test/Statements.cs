@@ -156,4 +156,25 @@ public class Statements
         compilationEngine.BeginCompilationRoutine();
         Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
     }
+    
+    [Test]
+    public void AdvancedLetStatementTest()
+    {
+        var codeList = new List<string>
+        {
+            "class main {",
+            "    method void incSize() {",
+            "        if (((y + size) < 254) & ((x + size) < 510)) {",
+            "            do erase();",
+            "            let size = size + 2;",
+            "            do draw();",
+            "        }",
+            "        return;",
+            "    }",
+            "}"
+        };
+        var compilationEngine = GenerateCompilationEngine(codeList);
+        compilationEngine.BeginCompilationRoutine();
+        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+    }
 }

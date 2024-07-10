@@ -69,48 +69,40 @@ public class JackToXmlWriter
 
     private void HandleDirectory()
     {
-        throw new NotImplementedException();
+        var fileList = Directory.GetFiles(_fileOrDirectory);
         
-        // var fileList = Directory.GetFiles(_fileOrDirectory);
-        // if (!File.Exists(_fileOrDirectory + "\\Sys.vm"))
-        // {
-        //     Console.WriteLine("A file named \"Sys.vm\" is required in the target folder");
-        //     Environment.Exit(1);
-        // }
-        // Dictionary<string, List<string>> rawVmCode = [];
-        // // Write the code to a .hack file
-        // var outputFile = $"{_fileOrDirectory}\\{new DirectoryInfo(_fileOrDirectory).Name}.asm";
-        // var newFs = File.Create(outputFile);
-        // newFs.Close();
-        // // Add the Sys.vm to the raw code first
-        // rawVmCode.Add("Sys", File.ReadLines(_fileOrDirectory + "\\Sys.vm").ToList()); 
-        // // Bootstrap the vm code
-        // rawVmCode["Sys"].Insert(0,"call Sys.init");
-        // // Loop through remaining vm files and append their text to the list
-        // foreach (var file in fileList)
-        // {
-        //     if (Path.GetExtension(file) != ".vm") continue;
-        //     if (Path.GetFileNameWithoutExtension(file) == "Sys") continue;
-        //     var fileCode = File.ReadLines(file).ToList();
-        //     rawVmCode.Add(Path.GetFileNameWithoutExtension(file),fileCode);
-        // }
-        //
-        // foreach (var (file, codeList) in rawVmCode)
-        // {
-        //     var codeGen = new CommandCodeGenerator(file);
-        //     var parser = new Parser(codeList);
-        //     using var streamWriter = File.AppendText(outputFile);
-        //     do
-        //     {
-        //         parser.Advance();
-        //         var currentCommand = parser.CurrentCommand;
-        //         if (currentCommand == null) break;
-        //         currentCommand = codeGen.CommandCodeGen(currentCommand);
-        //         foreach (var assemblyCommand in currentCommand.AssemblyCommandList)
-        //         {
-        //             streamWriter.WriteLine(assemblyCommand);
-        //         }
-        //     } while (parser.HasMoreLines);
-        // }
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()
+            .AddConfiguration(_config.GetSection("Logging")));
+        var logger = factory.CreateLogger<JackToXmlWriter>();
+        
+        foreach (var file in fileList)
+        {
+            logger.LogInformation($"Parsing file: {file}");
+            List<string> rawVmCode;
+            if (Path.GetExtension(file) != ".jack") continue;
+            // Attempt to load the file
+            try
+            {
+                rawVmCode = File.ReadLines(file).ToList();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+            // Create the output file
+            var outputFile = $"{Path.GetDirectoryName(file)}\\{Path.GetFileNameWithoutExtension(file)}.xml";
+            var newFs = File.Create(outputFile);
+            newFs.Close();
+            // Now generate the xml file
+            var tokenizer = new Tokenizer(rawVmCode, logger);
+            var compilationEngine = new CompilationEngine(tokenizer, logger);
+            compilationEngine.BeginCompilationRoutine();
+        
+            using var streamWriter = File.AppendText(outputFile);
+            foreach (var line in compilationEngine.XmlLines)
+            {
+                streamWriter.WriteLine(line);
+            }
+        }
     }
 }
