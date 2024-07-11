@@ -37,7 +37,8 @@ var config = new ConfigurationBuilder()
     .AddJsonFile($"appsettings.json")
     .Build();
 // Create the logger
-using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole()
+using ILoggerFactory factory = LoggerFactory.Create(builder => 
+    builder.AddConsole()
     .AddConfiguration(config.GetSection("Logging")));
 var logger = factory.CreateLogger<JackToXmlWriter>();
 // Feed the selected string into the xml read writer
