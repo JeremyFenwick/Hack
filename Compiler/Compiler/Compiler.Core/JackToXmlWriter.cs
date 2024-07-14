@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Compiler.Core.SyntaxAnalyzer;
 using Microsoft.Extensions.Logging;
 
-namespace Compiler.Core.SyntaxAnalyzer;
+namespace Compiler.Core;
 
 public class JackToXmlWriter
 {

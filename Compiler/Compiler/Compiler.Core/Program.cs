@@ -1,6 +1,4 @@
-﻿// Arg1 is the input file (it must be a vm file)
-
-using Compiler.Core;
+﻿using Compiler.Core;
 using Compiler.Core.SyntaxAnalyzer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

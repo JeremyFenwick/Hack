@@ -11,6 +11,8 @@ public class CompilationEngine
     private byte _indentationLevel;
     private readonly List<string> _statementKeywords = ["let", "if", "while", "do", "return"];
     private readonly List<string> _ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="];
+    private SymbolTable _classSymbolTable;
+    private SymbolTable _subroutineSymbolTable;
     
     public Token CurrentToken { get; private set; }
     public LinkedList<string> XmlLines { get; private set; }
@@ -22,6 +24,8 @@ public class CompilationEngine
         XmlLines = new LinkedList<string>();
         _indentationLevel = 0;
         CurrentToken = null!;
+        _classSymbolTable = new SymbolTable();
+        _subroutineSymbolTable = new SymbolTable();
     }
 
     public void BeginCompilationRoutine()
@@ -71,13 +75,16 @@ public class CompilationEngine
     {
         WriteXmlLine(false, "classVariableDeclaration");
         _indentationLevel++;
-        // static
+        // static or field
+        var variableKind = CurrentToken.TokenValue == "static" ? Kind.Static : Kind.Field;
         TokenToXmlLine(CurrentToken, TokenType.Keyword, ["static", "field"]);
         // int or className
+        var variableType = CurrentToken.TokenValue;
         TokenToXmlLine(CurrentToken);
         // x, y, z
         do
         {
+            _classSymbolTable.AddSymbol(CurrentToken.TokenValue, variableKind, variableType);
             TokenToXmlLine(CurrentToken, TokenType.Identifier);
             if (CurrentToken.TokenValue != ",")
             {
