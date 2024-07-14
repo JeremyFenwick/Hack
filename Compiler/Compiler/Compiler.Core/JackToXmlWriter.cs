@@ -48,7 +48,7 @@ public class JackToXmlWriter
         }
         // Now generate the xml file
         var tokenizer = new Tokenizer(rawVmCode, _logger);
-        var compilationEngine = new CompilationEngine(tokenizer, _logger);
+        var compilationEngine = new XmlCompilationEngine(tokenizer, _logger);
         compilationEngine.BeginCompilationRoutine();
         
         using var streamWriter = File.AppendText(outputFile);
@@ -82,7 +82,7 @@ public class JackToXmlWriter
             newFs.Close();
             // Now generate the xml file
             var tokenizer = new Tokenizer(rawVmCode, _logger);
-            var compilationEngine = new CompilationEngine(tokenizer, _logger);
+            var compilationEngine = new XmlCompilationEngine(tokenizer, _logger);
             compilationEngine.BeginCompilationRoutine();
         
             using var streamWriter = File.AppendText(outputFile);

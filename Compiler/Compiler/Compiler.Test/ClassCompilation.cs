@@ -6,12 +6,12 @@ namespace Compiler.Test;
 
 public class ClassCompilation
 {
-    private CompilationEngine GenerateCompilationEngine(List<string> codeList)
+    private XmlCompilationEngine GenerateCompilationEngine(List<string> codeList)
     {
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = factory.CreateLogger<Tests>();
         var tokenizer = new Core.SyntaxAnalyzer.Tokenizer(codeList, logger);
-        return new CompilationEngine(tokenizer, logger);
+        return new XmlCompilationEngine(tokenizer, logger);
     }
 
     [Test]

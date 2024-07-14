@@ -4,28 +4,28 @@ using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core.SyntaxAnalyzer;
 
-public class CompilationEngine
+public class VmCompilationEngine
 {
     private ITokenizer _tokenizer;
     private ILogger _logger;
     private byte _indentationLevel;
     private readonly List<string> _statementKeywords = ["let", "if", "while", "do", "return"];
     private readonly List<string> _ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="];
-    private SymbolTable _classSymbolTable;
-    private SymbolTable _subroutineSymbolTable;
     
     public Token CurrentToken { get; private set; }
     public LinkedList<string> XmlLines { get; private set; }
-    
-    public CompilationEngine(ITokenizer tokenizer, ILogger logger)
+    public SymbolTable ClassSymbolTable { get; private set; }
+    public SymbolTable SubroutineSymbolTable { get; private set; }
+
+    public VmCompilationEngine(ITokenizer tokenizer, ILogger logger)
     {
         _logger = logger;
         _tokenizer = tokenizer;
         XmlLines = new LinkedList<string>();
         _indentationLevel = 0;
         CurrentToken = null!;
-        _classSymbolTable = new SymbolTable();
-        _subroutineSymbolTable = new SymbolTable();
+        ClassSymbolTable = new SymbolTable();
+        SubroutineSymbolTable = new SymbolTable();
     }
 
     public void BeginCompilationRoutine()
@@ -73,29 +73,25 @@ public class CompilationEngine
 
     private void ClassVariableDeclaration()
     {
-        WriteXmlLine(false, "classVariableDeclaration");
-        _indentationLevel++;
         // static or field
         var variableKind = CurrentToken.TokenValue == "static" ? Kind.Static : Kind.Field;
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, ["static", "field"]);
+        _tokenizer.Advance();
         // int or className
         var variableType = CurrentToken.TokenValue;
-        TokenToXmlLine(CurrentToken);
+        _tokenizer.Advance();
         // x, y, z
         do
         {
-            _classSymbolTable.AddSymbol(CurrentToken.TokenValue, variableKind, variableType);
-            TokenToXmlLine(CurrentToken, TokenType.Identifier);
+            ClassSymbolTable.AddSymbol(CurrentToken.TokenValue, variableKind, variableType);
+            _tokenizer.Advance();
             if (CurrentToken.TokenValue != ",")
             {
                 break;
             }
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ",");
+            _tokenizer.Advance();
         } while (true);
         // ;
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
-        _indentationLevel--;
-        WriteXmlLine(true, "classVariableDeclaration");
+        _tokenizer.Advance();
     }
 
     private void ClassSubroutineDeclaration()
@@ -441,24 +437,24 @@ public class CompilationEngine
 
     private void SubroutineVariableDeclaration()
     {
-        WriteXmlLine(false, "variableDeclaration");
-        _indentationLevel++;
-        
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, "var");
-        TokenToXmlLine(CurrentToken);
+        // var
+        _tokenizer.Advance();
+        // type (int)
+        var variableType = CurrentToken.TokenValue;
+        _tokenizer.Advance();
         do
         {
-            TokenToXmlLine(CurrentToken, TokenType.Identifier);
+            // symbol name
+            SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, Kind.Variable, variableType);
+            _tokenizer.Advance();
             if (CurrentToken.TokenValue != ",")
             {
                 break;
             }
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ",");
-        } while (true);
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
 
-        _indentationLevel--;
-        WriteXmlLine(true, "variableDeclaration");
+            _tokenizer.Advance();
+        } while (true);
+        _tokenizer.Advance();
     }
     
     private void TokenToXmlLine(Token token, TokenType expectedTokenType, string expectedValue)
