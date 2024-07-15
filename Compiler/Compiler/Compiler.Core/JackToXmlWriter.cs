@@ -52,7 +52,7 @@ public class JackToXmlWriter
         compilationEngine.BeginCompilationRoutine();
         
         using var streamWriter = File.AppendText(outputFile);
-        foreach (var line in compilationEngine.XmlLines)
+        foreach (var line in compilationEngine.CodeLines)
         {
             streamWriter.WriteLine(line);
         }
@@ -86,7 +86,7 @@ public class JackToXmlWriter
             compilationEngine.BeginCompilationRoutine();
         
             using var streamWriter = File.AppendText(outputFile);
-            foreach (var line in compilationEngine.XmlLines)
+            foreach (var line in compilationEngine.CodeLines)
             {
                 streamWriter.WriteLine(line);
             }

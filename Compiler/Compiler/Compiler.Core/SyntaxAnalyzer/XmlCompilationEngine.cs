@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core.SyntaxAnalyzer;
 
-public class XmlCompilationEngine
+public class XmlCompilationEngine : ICompilationEngine
 {
     private ITokenizer _tokenizer;
     private ILogger _logger;
@@ -13,13 +13,13 @@ public class XmlCompilationEngine
     private readonly List<string> _ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="];
     
     public Token CurrentToken { get; private set; }
-    public LinkedList<string> XmlLines { get; private set; }
+    public LinkedList<string> CodeLines { get; private set; }
     
     public XmlCompilationEngine(ITokenizer tokenizer, ILogger logger)
     {
         _logger = logger;
         _tokenizer = tokenizer;
-        XmlLines = new LinkedList<string>();
+        CodeLines = new LinkedList<string>();
         _indentationLevel = 0;
         CurrentToken = null!;
     }
@@ -465,7 +465,7 @@ public class XmlCompilationEngine
             TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected: {expectedValue}, Actual: {token.TokenValue}");
         }
 
-        XmlLines.AddLast(XmlFormatter(token));
+        CodeLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         NextToken();
     }
@@ -481,7 +481,7 @@ public class XmlCompilationEngine
             TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected in: {string.Join("", expectedValues)}, Actual: {token.TokenValue}");
         }
 
-        XmlLines.AddLast(XmlFormatter(token));
+        CodeLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         NextToken();
     }
@@ -493,21 +493,21 @@ public class XmlCompilationEngine
             throw new Exception($"Token - {token.TokenValue} did not have the expected Tokentype. Expected: {expectedTokenType}, Actual: {token.TokenType}");
         }
 
-        XmlLines.AddLast(XmlFormatter(token));
+        CodeLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         NextToken();
     }
 
     private void TokenToXmlLine(Token token)
     {
-        XmlLines.AddLast(XmlFormatter(token));
+        CodeLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         NextToken();
     }
     
     private void TokenToXmlLine(Token token, bool advanceToken)
     {
-        XmlLines.AddLast(XmlFormatter(token));
+        CodeLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
 
         if (advanceToken)
@@ -525,7 +525,7 @@ public class XmlCompilationEngine
     private void WriteXmlLine(bool closingTag, string line)
     {
         var indentationSpacing = new string('\t', _indentationLevel);
-        XmlLines.AddLast(!closingTag ? $"{indentationSpacing}<{line}>" : $"{indentationSpacing}</{line}>");
+        CodeLines.AddLast(!closingTag ? $"{indentationSpacing}<{line}>" : $"{indentationSpacing}</{line}>");
         _logger.LogDebug($"Adding token to xml line: {CurrentToken.TokenValue}");
     }
 

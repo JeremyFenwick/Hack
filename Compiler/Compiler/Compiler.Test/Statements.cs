@@ -28,7 +28,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -44,7 +44,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -60,7 +60,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -78,7 +78,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -99,7 +99,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -120,7 +120,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -138,7 +138,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     [Test]
     public void LetStringStatementTest()
@@ -154,7 +154,7 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
     
     [Test]
@@ -175,6 +175,6 @@ public class Statements
         };
         var compilationEngine = GenerateCompilationEngine(codeList);
         compilationEngine.BeginCompilationRoutine();
-        Assert.That(compilationEngine.XmlLines.Last.Value, Is.EquivalentTo("</class>"));
+        Assert.That(compilationEngine.CodeLines.Last.Value, Is.EquivalentTo("</class>"));
     }
 }
