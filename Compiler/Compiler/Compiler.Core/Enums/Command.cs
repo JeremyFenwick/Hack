@@ -10,5 +10,7 @@ public enum Command
     LessThan,
     And,
     Or,
-    Not
+    Not,
+    Multiply,
+    Divide
 }

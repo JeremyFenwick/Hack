@@ -11,8 +11,20 @@ public class VmCompilationEngine : ICompilationEngine
     private ILogger _logger;
     private byte _indentationLevel;
     private readonly List<string> _statementKeywords = ["let", "if", "while", "do", "return"];
-    private readonly List<string> _ops = ["+", "-", "*", "/", "&", "|", "<", ">", "="];
+    private readonly Dictionary<string, Command> _ops = new()
+    {
+        { "+", Command.Add },
+        { "-", Command.Subtract },
+        { "*", Command.Multiply },
+        { "/", Command.Divide },
+        { "&", Command.And },
+        { "|", Command.Or },
+        { "<", Command.LessThan },
+        { ">", Command.GreaterThan },
+        { "=", Command.Equal }
+    };
     private readonly bool _debug;
+    
     public Token CurrentToken { get; private set; }
     public LinkedList<string> CodeLines { get; private set; }
     public SymbolTable ClassSymbolTable { get; private set; }
@@ -99,8 +111,10 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void ClassSubroutineDeclaration(string className)
     {
+        var numberOfArguments = 0;
         SubroutineSymbolTable.AddSymbol("this", Kind.Argument, className);
         // function
+        var functionName = CurrentToken.TokenValue;
         NextToken();
         // void
         NextToken();
@@ -116,6 +130,7 @@ public class VmCompilationEngine : ICompilationEngine
                 var argumentType = CurrentToken.TokenValue;
                 NextToken();
                 SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, Kind.Argument, argumentType);
+                numberOfArguments++;
                 NextToken();
             }
             if (CurrentToken.TokenValue == ",")
@@ -129,6 +144,8 @@ public class VmCompilationEngine : ICompilationEngine
         }
         // )
         NextToken();
+        var commandString = VmCommandGenerator.GenerateFunction($"{className}.{functionName}", numberOfArguments);
+        CodeLines.AddLast(commandString);
         
         SubroutineBody();
 
@@ -140,9 +157,8 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void SubroutineBody()
     {
-        WriteXmlLine(false, "subroutineBody");
-        _indentationLevel++;
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
+        // {
+        NextToken();
         
         // Handle variable declarations
         while (true)
@@ -159,17 +175,12 @@ public class VmCompilationEngine : ICompilationEngine
         {
             StatementLoop();
         }
-        
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
-        _indentationLevel--;
-        WriteXmlLine(true, "subroutineBody");
+        // }
+        NextToken();
     }
 
     private void StatementLoop() 
     {
-        WriteXmlLine(false, "statements");
-        _indentationLevel++;
-        
         do
         {
             switch (CurrentToken.TokenValue)
@@ -195,34 +206,31 @@ public class VmCompilationEngine : ICompilationEngine
             if (CurrentToken.TokenValue == "}") break;
             
         } while (true);
-            
-        _indentationLevel--;
-        WriteXmlLine(true, "statements");
     }
     
     private void ReturnStatement()
     {
-        WriteXmlLine(false, "returnStatement");
-        _indentationLevel++;
-        
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, "return");
+        // return
+        NextToken();
         // Handle the case where the return statement has an expression
         if (CurrentToken.TokenValue != ";")
         {
             Expression();
+            CodeLines.AddLast(VmCommandGenerator.GenerateReturn());
         }
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
-
-        _indentationLevel--;
-        WriteXmlLine(true, "returnStatement");
+        else
+        {
+            // add a dummy value to the stack, since we must return something
+            CodeLines.AddLast(VmCommandGenerator.GeneratePushConstantCommand("0"));
+            CodeLines.AddLast(VmCommandGenerator.GenerateReturn());
+        }
+        NextToken();
     }
 
     private void DoStatement()
     {
-        WriteXmlLine(false, "doStatement");
-        _indentationLevel++;
-        
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, "do");
+        // do
+        NextToken();
         // This function is LL(2) so we need to look ahead to know what to do
         var lastToken = CurrentToken;
         NextToken();
@@ -230,29 +238,41 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle subroutine call. Inlined for clarity as separating creates a mess
         if (CurrentToken.TokenValue == "(")
         {
-
-            TokenToXmlLine(lastToken, false);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
-            ExpressionList();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-
+            // fun
+            var functionName = lastToken.TokenValue;
+            // (
+            NextToken();
+            var numberOfArguments = ExpressionList();
+            // )
+            NextToken();
+            
+            var commandString = VmCommandGenerator.GenerateCall($"{functionName}", numberOfArguments);
+            CodeLines.AddLast(commandString);
         }
         // Handle alternate subroutine call
         else
         {
-
-            TokenToXmlLine(lastToken, false);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ".");
-            TokenToXmlLine(CurrentToken, TokenType.Identifier);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
-            ExpressionList();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+            // class
+            var className = lastToken.TokenValue;
+            // .
+            NextToken();
+            // functionName
+            var functionName = CurrentToken.TokenValue;
+            NextToken();
+            // (
+            NextToken();
+            // Expressions
+            var numberOfArguments = ExpressionList();
+            // )
+            NextToken();
+            var commandString = VmCommandGenerator.GenerateCall($"{className}.{functionName}", numberOfArguments);
+            CodeLines.AddLast(commandString);
 
         }
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
-
-        _indentationLevel--;
-        WriteXmlLine(true, "doStatement");
+        // ;
+        NextToken();
+        // do expressions do not care about the return values, so pop the stack to temp 0
+        CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand(Segment.Temp, 0));
     }
 
     private void WhileStatement()
@@ -325,36 +345,32 @@ public class VmCompilationEngine : ICompilationEngine
     
     private void Expression()
     {
-        WriteXmlLine(false, "expression");
-        _indentationLevel++;
-        
         // There will be at least one term. Deal with the case where there is more than one with an op
+        Term();
+        
         while (true)
         {
-            Term();
-            if (_ops.Contains(CurrentToken.TokenValue))
+            if (_ops.ContainsKey(CurrentToken.TokenValue))
             {
-                TokenToXmlLine(CurrentToken, TokenType.Symbol, _ops);
-                continue;
+                var op = CurrentToken.TokenValue;
+                NextToken();
+                Term();
+                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(_ops[op]));
             }
             break;
         }
         
-        _indentationLevel--;
-        WriteXmlLine(true, "expression");    
     }
 
     private void Term()
     {
-        WriteXmlLine(false, "term");
-        _indentationLevel++;
         // This function is LL(2) so we need to look ahead to know what to do
         var lastToken = CurrentToken;
         NextToken();
         // Handle integer constant
         if (lastToken.TokenType == TokenType.IntConst)
         {
-            TokenToXmlLine(lastToken, false);
+            CodeLines.AddLast(VmCommandGenerator.GeneratePushConstantCommand(lastToken.TokenValue));
         } 
         // Handle string constant
         else if (lastToken.TokenType == TokenType.StringConst)
@@ -364,9 +380,9 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle nested expression
         else if (lastToken.TokenValue == "(")
         {
-            TokenToXmlLine(lastToken, false);
             Expression();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+            // )
+            NextToken();
         }
         // Handle unaryOp
         else if (lastToken.TokenValue is "~" or "-")
@@ -410,31 +426,26 @@ public class VmCompilationEngine : ICompilationEngine
         {
             TokenToXmlLine(lastToken, false);
         }
-        _indentationLevel--;
-        WriteXmlLine(true, "term");
     }
 
-    private void ExpressionList()
+    private int ExpressionList()
     {
-        WriteXmlLine(false, "expressionList");
-        _indentationLevel++;
-
+        var numberOfExpressions = 0;
         if (CurrentToken.TokenValue != ")")
         {
             while (true)
             {
                 Expression();
+                numberOfExpressions++;
                 if (CurrentToken.TokenValue == ",")
                 {
-                    TokenToXmlLine(CurrentToken, TokenType.Symbol, ",");
+                    NextToken();
                     continue;
                 }
                 break;
             }
         }
-        
-        _indentationLevel--;
-        WriteXmlLine(true, "expressionList");
+        return numberOfExpressions;
     }
 
     private void SubroutineVariableDeclaration()
