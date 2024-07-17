@@ -52,6 +52,7 @@ public class VmCompilationEngine : ICompilationEngine
         }
     }
 
+
     private void CompileClass()
     {
         // class

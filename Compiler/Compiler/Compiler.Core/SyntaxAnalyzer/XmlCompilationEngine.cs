@@ -14,7 +14,7 @@ public class XmlCompilationEngine : ICompilationEngine
     
     public Token CurrentToken { get; private set; }
     public LinkedList<string> CodeLines { get; private set; }
-    
+
     public XmlCompilationEngine(ITokenizer tokenizer, ILogger logger)
     {
         _logger = logger;
@@ -33,6 +33,7 @@ public class XmlCompilationEngine : ICompilationEngine
             CompileClass();
         }
     }
+
 
     private void CompileClass()
     {

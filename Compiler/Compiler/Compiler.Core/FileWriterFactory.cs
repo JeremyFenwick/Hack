@@ -5,7 +5,7 @@ namespace Compiler.Core;
 
 public static class FileWriterFactory
 {
-    public static JackToFileWriter CreateFileWriter(string? fileOrDirectory, bool vmMode = false)
+    public static JackToFileWriter CreateFileWriter(string? fileOrDirectory = null, bool xmlMode = false)
     {
         // Get the path from the console if it is empty
         if (string.IsNullOrEmpty(fileOrDirectory))
@@ -35,6 +35,6 @@ public static class FileWriterFactory
                 .AddConfiguration(config.GetSection("Logging")));
         var logger = factory.CreateLogger<JackToFileWriter>();
         // Feed the selected string into the xml read writer
-        return new JackToFileWriter(fileOrDirectory, logger, vmMode);
+        return new JackToFileWriter(fileOrDirectory, logger, xmlMode);
     }
 }
