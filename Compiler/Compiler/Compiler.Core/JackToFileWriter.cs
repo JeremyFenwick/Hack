@@ -3,22 +3,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Compiler.Core;
 
-public class JackToXmlWriter
+public class JackToFileWriter
 {
     private string _fileOrDirectory;
     private bool _fileMode = false;
     private ILogger _logger;
+    private bool _vmMode;
 
-    public JackToXmlWriter(string fileOrDirectory, ILogger logger)
+    public JackToFileWriter(string fileOrDirectory, ILogger logger, bool vmMode = false)
     {
         _logger = logger;
         _fileOrDirectory = fileOrDirectory;
+        _vmMode = vmMode;
         if (fileOrDirectory.EndsWith(".jack"))
         {
             _fileMode = true;
         }
     }
-    public void GenerateXml()
+    public void GenerateCode()
     {
         if (_fileMode)
         {
@@ -33,8 +35,16 @@ public class JackToXmlWriter
     private void HandleSingleFile()
     {
         List<string> rawVmCode;
+        string outputFile;
         // Write the code to a .hack file
-        var outputFile = $"{Path.GetDirectoryName(_fileOrDirectory)}\\{Path.GetFileNameWithoutExtension(_fileOrDirectory)}.xml";
+        if (_vmMode)
+        {
+            outputFile = $"{Path.GetDirectoryName(_fileOrDirectory)}\\{Path.GetFileNameWithoutExtension(_fileOrDirectory)}.xml";
+        }
+        else
+        {
+            outputFile = $"{Path.GetDirectoryName(_fileOrDirectory)}\\{Path.GetFileNameWithoutExtension(_fileOrDirectory)}.vm";
+        }
         var newFs = File.Create(outputFile);
         newFs.Close();
         // Attempt to load the file
@@ -66,6 +76,7 @@ public class JackToXmlWriter
         {
             _logger.LogInformation($"Parsing file: {file}");
             List<string> rawVmCode;
+            string outputFile;
             if (Path.GetExtension(file) != ".jack") continue;
             // Attempt to load the file
             try
@@ -77,7 +88,14 @@ public class JackToXmlWriter
                 throw new Exception(e.Message);
             }
             // Create the output file
-            var outputFile = $"{Path.GetDirectoryName(file)}\\{Path.GetFileNameWithoutExtension(file)}.xml";
+            if (_vmMode)
+            {
+                outputFile = $"{Path.GetDirectoryName(file)}\\{Path.GetFileNameWithoutExtension(file)}.xml";
+            }
+            else
+            {
+                outputFile = $"{Path.GetDirectoryName(file)}\\{Path.GetFileNameWithoutExtension(file)}.vm"; 
+            }
             var newFs = File.Create(outputFile);
             newFs.Close();
             // Now generate the xml file
