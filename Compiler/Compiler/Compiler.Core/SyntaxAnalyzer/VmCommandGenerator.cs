@@ -4,14 +4,14 @@ namespace Compiler.Core.SyntaxAnalyzer;
 
 public static class VmCommandGenerator
 {
-    public static string GeneratePushCommand(Segment segment, int index)
+    public static string GeneratePushCommand(string segment, int index)
     {
-        return $"push {segment.ToString().ToLower()} {index}";
+        return $"push {segment} {index}";
     }
 
-    public static string GeneratePopCommand(Segment segment, int index)
+    public static string GeneratePopCommand(string segment, int index)
     {
-        return $"pop {segment.ToString().ToLower()} {index}";
+        return $"pop {segment} {index}";
     }
 
     public static string GeneratePushConstantCommand(string constant)

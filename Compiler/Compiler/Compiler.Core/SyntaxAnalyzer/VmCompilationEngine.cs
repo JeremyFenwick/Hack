@@ -90,7 +90,7 @@ public class VmCompilationEngine : ICompilationEngine
     private void ClassVariableDeclaration()
     {
         // static or field
-        var variableKind = CurrentToken.TokenValue == "static" ? Kind.Static : Kind.Field;
+        var variableKind = CurrentToken.TokenValue == "static" ? "static" : "field";
         NextToken();
         // int or className
         var variableType = CurrentToken.TokenValue;
@@ -113,13 +113,13 @@ public class VmCompilationEngine : ICompilationEngine
     private void ClassSubroutineDeclaration(string className)
     {
         var numberOfArguments = 0;
-        SubroutineSymbolTable.AddSymbol("this", Kind.Argument, className);
+        SubroutineSymbolTable.AddSymbol("this", "argument", className);
         // function
-        var functionName = CurrentToken.TokenValue;
         NextToken();
         // void
         NextToken();
         // exampleFunction
+        var functionName = CurrentToken.TokenValue;
         NextToken();
         // (
         NextToken();
@@ -130,7 +130,7 @@ public class VmCompilationEngine : ICompilationEngine
             {
                 var argumentType = CurrentToken.TokenValue;
                 NextToken();
-                SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, Kind.Argument, argumentType);
+                SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, "argument", argumentType);
                 numberOfArguments++;
                 NextToken();
             }
@@ -273,7 +273,7 @@ public class VmCompilationEngine : ICompilationEngine
         // ;
         NextToken();
         // do expressions do not care about the return values, so pop the stack to temp 0
-        CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand(Segment.Temp, 0));
+        CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand("temp", 0));
     }
 
     private void WhileStatement()
@@ -394,6 +394,7 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle keyword constant
         else if (lastToken.TokenValue is "true" or "false" or "null" or "this")
         {
+            // push this onto the stack
             TokenToXmlLine(lastToken, false);
         }
         // Handle indexed variable name
@@ -425,7 +426,9 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle the varName case
         else
         {
-            TokenToXmlLine(lastToken, false);
+            var symbol = FetchSymbol(lastToken.TokenValue);
+            var command = VmCommandGenerator.GeneratePushCommand(KindToSegment(symbol.Kind), symbol.Index);
+            CodeLines.AddLast(command);
         }
     }
 
@@ -459,7 +462,7 @@ public class VmCompilationEngine : ICompilationEngine
         do
         {
             // symbol name
-            SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, Kind.Variable, variableType);
+            SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, "variable", variableType);
             NextToken();
             if (CurrentToken.TokenValue != ",")
             {
@@ -469,6 +472,35 @@ public class VmCompilationEngine : ICompilationEngine
             NextToken();
         } while (true);
         NextToken();
+    }
+
+    private Symbol FetchSymbol(string symbolName)
+    {
+        if (SubroutineSymbolTable.ContainsSymbolName(symbolName))
+        {
+            var symbol = SubroutineSymbolTable.GetSymbol(symbolName);
+            return symbol!;
+        }
+        else if (ClassSymbolTable.ContainsSymbolName(symbolName))
+        {
+            var symbol = ClassSymbolTable.GetSymbol(symbolName);
+            return symbol!;
+        }
+        else
+        {
+            throw new Exception($"Could not fetch unknown symbol name: {symbolName}");
+        }
+    }
+
+    private string KindToSegment(string kind)
+    {
+        return kind switch
+        {
+            "static" => "static",
+            "field" => "this",
+            "local" => "local",
+            "argument" => "argument"
+        };
     }
     
     private void TokenToXmlLine(Token token, TokenType expectedTokenType, string expectedValue)

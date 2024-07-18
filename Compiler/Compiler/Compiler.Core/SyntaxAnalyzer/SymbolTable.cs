@@ -28,24 +28,24 @@ public class SymbolTable
         _symbolTable.Clear();
     }
 
-    public void AddSymbol(string name, Kind kind, string type)
+    public void AddSymbol(string name, string kind, string type)
     {
         int index;
         switch (kind)
         {
-            case Kind.Static:
+            case "static":
                 index = _staticIndex;
                 _staticIndex++;
                 break;
-            case Kind.Argument:
+            case "argument":
                 index = _argumentIndex;
                 _argumentIndex++;
                 break;
-            case Kind.Field:
+            case "field":
                 index = _fieldIndex;
                 _fieldIndex++;
                 break;
-            case Kind.Variable:
+            case "variable":
                 index = _variableIndex;
                 _variableIndex++;
                 break;
@@ -67,5 +67,10 @@ public class SymbolTable
     public Symbol? GetSymbol(string name)
     {
         return _symbolTable.GetValueOrDefault(name);
+    }
+
+    public bool ContainsSymbolName(string name)
+    {
+        return _symbolTable.ContainsKey(name);
     }
 }

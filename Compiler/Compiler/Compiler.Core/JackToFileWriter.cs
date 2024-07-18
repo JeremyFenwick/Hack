@@ -21,7 +21,7 @@ public class JackToFileWriter
         {
             _fileMode = true;
         }
-        _outputFileExtension = _xmlMode ? ".vm" : ".xml";
+        _outputFileExtension = _xmlMode ? ".xml" : ".vm";
     }
     
     public void GenerateCode()
