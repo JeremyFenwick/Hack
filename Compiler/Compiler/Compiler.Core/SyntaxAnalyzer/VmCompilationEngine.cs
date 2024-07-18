@@ -24,6 +24,7 @@ public class VmCompilationEngine : ICompilationEngine
         { "=", Command.Equal }
     };
     private readonly bool _debug;
+    private (string Label, int Index) _labelTuple;
     
     public Token CurrentToken { get; private set; }
     public LinkedList<string> CodeLines { get; private set; }
@@ -146,6 +147,9 @@ public class VmCompilationEngine : ICompilationEngine
         // )
         NextToken();
         var commandString = VmCommandGenerator.GenerateFunction($"{className}.{functionName}", numberOfArguments);
+        // Initialize the unique labels for loops
+        _labelTuple.Label = $"{className}-{functionName}";
+        _labelTuple.Index = 0;
         CodeLines.AddLast(commandString);
         
         SubroutineBody();
@@ -278,70 +282,92 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void WhileStatement()
     {
-        WriteXmlLine(false, "whileStatement");
-        _indentationLevel++;
-
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, "while");
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
+        // setup the unique labels
+        _labelTuple.Index++;
+        var labelOne = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        _labelTuple.Index++;
+        var labelTwo = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        // while
+        NextToken();
+        // (
+        NextToken();
+        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelOne));
         Expression();
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
-        
+        CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Not));
+        CodeLines.AddLast(VmCommandGenerator.GenerateIfGoto(labelTwo));
+        // )
+        NextToken();
+        // {
+        NextToken();
         StatementLoop();
-
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
-
-        _indentationLevel--;
-        WriteXmlLine(true, "whileStatement");
+        CodeLines.AddLast(VmCommandGenerator.GenerateGoto(labelOne));
+        // }
+        NextToken();
+        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelTwo));
     }
 
     private void IfStatement()
     {
-        WriteXmlLine(false, "ifStatement");
-        _indentationLevel++;
-        
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, "if");
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
+        // setup the unique labels
+        _labelTuple.Index++;
+        var labelOne = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        _labelTuple.Index++;
+        var labelTwo = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        // if
+        NextToken();
+        // (
+        NextToken();
         Expression();
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
-        
+        // )
+        NextToken();
+        // Push not to invert the statement result
+        CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Not));
+        // {
+        NextToken();
+        CodeLines.AddLast(VmCommandGenerator.GenerateIfGoto(labelOne));
         StatementLoop();
-
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
+        CodeLines.AddLast(VmCommandGenerator.GenerateGoto(labelTwo));
+        // }
+        NextToken();
+        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelOne));
         if (CurrentToken.TokenValue == "else")
         {
-            TokenToXmlLine(CurrentToken, TokenType.Keyword, "else");
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "{");
+            // else
+            NextToken();
+            // {
+            NextToken();
             
             StatementLoop();
-
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "}");
+            // }
+            NextToken();
         }
-        
-        _indentationLevel--;
-        WriteXmlLine(true, "ifStatement");       
+        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelTwo));
     }
 
     private void LetStatement()
     {
-        WriteXmlLine(false, "letStatement");
-        _indentationLevel++;
-        
-        TokenToXmlLine(CurrentToken, TokenType.Keyword, "let");
-        TokenToXmlLine(CurrentToken, TokenType.Identifier);
+        // let
+        NextToken();
+        // varName
+        var varName = CurrentToken.TokenValue;
+        NextToken();
         if (CurrentToken.TokenValue == "[")
         {
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "[");
+            throw new NotImplementedException("Have not implemented arrays");
+            // [
+            NextToken();
             Expression();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
+            // ]
+            NextToken();
         }
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, "=");
+        // =
+        NextToken();
         Expression();
-        TokenToXmlLine(CurrentToken, TokenType.Symbol, ";");
-        
-        _indentationLevel--;
-        WriteXmlLine(true, "letStatement");        
+        // ;
+        NextToken();
+        var symbol = FetchSymbol(varName);
+        var segment = KindToSegment(symbol.Kind);
+        CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand(segment, symbol.Index));
     }
     
     private void Expression()
@@ -388,14 +414,33 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle unaryOp
         else if (lastToken.TokenValue is "~" or "-")
         {
-            TokenToXmlLine(lastToken, false);
             Term();
+            if (lastToken.TokenValue == "~")
+            {
+                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Not));
+            }
+            else
+            {
+                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Negative));
+            }
         }
         // Handle keyword constant
         else if (lastToken.TokenValue is "true" or "false" or "null" or "this")
         {
+            if (lastToken.TokenValue is "false" or "null")
+            {
+                CodeLines.AddLast(VmCommandGenerator.GeneratePushCommand("constant", 0));
+            } 
+            else if (lastToken.TokenValue is "true")
+            {
+                CodeLines.AddLast(VmCommandGenerator.GeneratePushCommand("constant", 1));
+                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Negative));
+            }
+            else
+            {
+                throw new NotImplementedException("This keyword is not implemented");
+            }
             // push this onto the stack
-            TokenToXmlLine(lastToken, false);
         }
         // Handle indexed variable name
         else if (CurrentToken.TokenValue == "[")
@@ -408,20 +453,29 @@ public class VmCompilationEngine : ICompilationEngine
         // Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
         {
-            TokenToXmlLine(lastToken, false);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
-            ExpressionList();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+            var functionName = lastToken.TokenValue;
+            // (
+            NextToken();
+            var numberOfArguments = ExpressionList();
+            // )
+            NextToken();
+            CodeLines.AddLast(VmCommandGenerator.GenerateCall(functionName, numberOfArguments));
         }
         // Handle alternate subroutine call
         else if (CurrentToken.TokenValue == ".")
         {
-            TokenToXmlLine(lastToken, false);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ".");
-            TokenToXmlLine(CurrentToken, TokenType.Identifier);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "(");
-            ExpressionList();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, ")");
+            var className = lastToken.TokenValue;
+            // .
+            NextToken();
+            // function Name
+            var functionName = lastToken.TokenValue; 
+            NextToken();
+            // (
+            NextToken();
+            var numberOfArguments = ExpressionList();
+            // )
+            NextToken();
+            CodeLines.AddLast(VmCommandGenerator.GenerateCall($"{className}.{functionName}", numberOfArguments));
         }
         // Handle the varName case
         else
@@ -492,14 +546,16 @@ public class VmCompilationEngine : ICompilationEngine
         }
     }
 
-    private string KindToSegment(string kind)
+    private static string KindToSegment(string kind)
     {
         return kind switch
         {
             "static" => "static",
             "field" => "this",
             "local" => "local",
-            "argument" => "argument"
+            "argument" => "argument",
+            "variable" => "local",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
     
@@ -514,41 +570,6 @@ public class VmCompilationEngine : ICompilationEngine
             TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected: {expectedValue}, Actual: {token.TokenValue}");
         }
 
-        CodeLines.AddLast(XmlFormatter(token));
-        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-        NextToken();
-    }
-    
-    private void TokenToXmlLine(Token token, TokenType expectedTokenType, List<string> expectedValues)
-    {
-        if (token.TokenType != expectedTokenType)
-        {
-            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected Tokentype. Expected: {expectedTokenType}, Actual: {token.TokenType}");
-        }
-        if (!expectedValues.Contains(token.TokenValue))
-        {
-            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected in: {string.Join("", expectedValues)}, Actual: {token.TokenValue}");
-        }
-
-        CodeLines.AddLast(XmlFormatter(token));
-        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-        NextToken();
-    }
-    
-    private void TokenToXmlLine(Token token, TokenType expectedTokenType)
-    {
-        if (token.TokenType != expectedTokenType)
-        {
-            throw new Exception($"Token - {token.TokenValue} did not have the expected Tokentype. Expected: {expectedTokenType}, Actual: {token.TokenType}");
-        }
-
-        CodeLines.AddLast(XmlFormatter(token));
-        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-        NextToken();
-    }
-
-    private void TokenToXmlLine(Token token)
-    {
         CodeLines.AddLast(XmlFormatter(token));
         _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
         NextToken();
