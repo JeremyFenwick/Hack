@@ -73,4 +73,17 @@ public class SymbolTable
     {
         return _symbolTable.ContainsKey(name);
     }
+    
+    public int NumberOfVariables()
+    {
+        var counter = 0;
+        foreach (var (key, value) in _symbolTable)
+        {
+            if (value.Kind is "variable" or "local") counter++;
+        }
+        return counter;
+    }
+    
+    
+    
 }

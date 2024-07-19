@@ -24,7 +24,7 @@ public class VmCompilationEngine : ICompilationEngine
         { "=", Command.Equal }
     };
     private readonly bool _debug;
-    private (string Label, int Index) _labelTuple;
+    private (string className, string subroutineName, int Index) _labelTuple;
     
     public Token CurrentToken { get; private set; }
     public LinkedList<string> CodeLines { get; private set; }
@@ -45,14 +45,13 @@ public class VmCompilationEngine : ICompilationEngine
 
     public void BeginCompilationRoutine()
     {
-        // _logger.LogInformation("Beginning compilation routine...");
+        _logger.LogInformation("Beginning compilation routine...");
         while (_tokenizer.HasMoreTokens)
         {
             NextToken();
             CompileClass();
         }
     }
-
 
     private void CompileClass()
     {
@@ -113,8 +112,7 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void ClassSubroutineDeclaration(string className)
     {
-        var numberOfArguments = 0;
-        SubroutineSymbolTable.AddSymbol("this", "argument", className);
+        // SubroutineSymbolTable.AddSymbol("this", "argument", className);
         // function
         NextToken();
         // void
@@ -132,7 +130,6 @@ public class VmCompilationEngine : ICompilationEngine
                 var argumentType = CurrentToken.TokenValue;
                 NextToken();
                 SubroutineSymbolTable.AddSymbol(CurrentToken.TokenValue, "argument", argumentType);
-                numberOfArguments++;
                 NextToken();
             }
             if (CurrentToken.TokenValue == ",")
@@ -146,11 +143,11 @@ public class VmCompilationEngine : ICompilationEngine
         }
         // )
         NextToken();
-        var commandString = VmCommandGenerator.GenerateFunction($"{className}.{functionName}", numberOfArguments);
+        
         // Initialize the unique labels for loops
-        _labelTuple.Label = $"{className}-{functionName}";
+        _labelTuple.className = $"{className}";
+        _labelTuple.subroutineName = $"{functionName}";
         _labelTuple.Index = 0;
-        CodeLines.AddLast(commandString);
         
         SubroutineBody();
 
@@ -174,6 +171,8 @@ public class VmCompilationEngine : ICompilationEngine
             }
             SubroutineVariableDeclaration();
         }
+        var commandString = VmCommandGenerator.GenerateFunction($"{_labelTuple.className}.{_labelTuple.subroutineName}", SubroutineSymbolTable.NumberOfVariables());
+        CodeLines.AddLast(commandString);
         // Handle statements
         
         if (_statementKeywords.Contains(CurrentToken.TokenValue))
@@ -251,7 +250,7 @@ public class VmCompilationEngine : ICompilationEngine
             // )
             NextToken();
             
-            var commandString = VmCommandGenerator.GenerateCall($"{functionName}", numberOfArguments);
+            var commandString = VmCommandGenerator.GenerateCall($"{_labelTuple.className}.{functionName}", numberOfArguments);
             CodeLines.AddLast(commandString);
         }
         // Handle alternate subroutine call
@@ -284,9 +283,9 @@ public class VmCompilationEngine : ICompilationEngine
     {
         // setup the unique labels
         _labelTuple.Index++;
-        var labelOne = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        var labelOne = $"{_labelTuple.className}.{_labelTuple.subroutineName}-{_labelTuple.Index}";
         _labelTuple.Index++;
-        var labelTwo = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        var labelTwo = $"{_labelTuple.className}.{_labelTuple.subroutineName}-{_labelTuple.Index}";
         // while
         NextToken();
         // (
@@ -310,9 +309,9 @@ public class VmCompilationEngine : ICompilationEngine
     {
         // setup the unique labels
         _labelTuple.Index++;
-        var labelOne = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        var labelOne = $"{_labelTuple.className}.{_labelTuple.subroutineName}-{_labelTuple.Index}";
         _labelTuple.Index++;
-        var labelTwo = $"{_labelTuple.Label}-{_labelTuple.Index}";
+        var labelTwo = $"{_labelTuple.className}.{_labelTuple.subroutineName}-{_labelTuple.Index}";
         // if
         NextToken();
         // (
@@ -450,7 +449,7 @@ public class VmCompilationEngine : ICompilationEngine
             Expression();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
         }
-        // Inlined for clarity as separating creates a mess
+        // Subroutine call. Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
         {
             var functionName = lastToken.TokenValue;
@@ -459,7 +458,7 @@ public class VmCompilationEngine : ICompilationEngine
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
-            CodeLines.AddLast(VmCommandGenerator.GenerateCall(functionName, numberOfArguments));
+            CodeLines.AddLast(VmCommandGenerator.GenerateCall($"{_labelTuple.className}.{functionName}", numberOfArguments));
         }
         // Handle alternate subroutine call
         else if (CurrentToken.TokenValue == ".")
@@ -468,7 +467,7 @@ public class VmCompilationEngine : ICompilationEngine
             // .
             NextToken();
             // function Name
-            var functionName = lastToken.TokenValue; 
+            var functionName = CurrentToken.TokenValue; 
             NextToken();
             // (
             NextToken();
