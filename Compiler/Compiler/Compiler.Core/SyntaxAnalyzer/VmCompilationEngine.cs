@@ -112,8 +112,12 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void ClassSubroutineDeclaration(string className)
     {
-        // SubroutineSymbolTable.AddSymbol("this", "argument", className);
-        // function
+        // function or method or constructor
+        if (CurrentToken.TokenValue == "method")
+        {
+            SubroutineSymbolTable.AddSymbol("this", "argument", className);
+        }
+        var constructor = CurrentToken.TokenValue == "constructor";
         NextToken();
         // void
         NextToken();
@@ -149,7 +153,7 @@ public class VmCompilationEngine : ICompilationEngine
         _labelTuple.subroutineName = $"{functionName}";
         _labelTuple.Index = 0;
         
-        SubroutineBody();
+        SubroutineBody(constructor);
 
         if (!_debug)
         {
@@ -157,7 +161,7 @@ public class VmCompilationEngine : ICompilationEngine
         }
     }
 
-    private void SubroutineBody()
+    private void SubroutineBody(bool constructor)
     {
         // {
         NextToken();
@@ -173,6 +177,16 @@ public class VmCompilationEngine : ICompilationEngine
         }
         var commandString = VmCommandGenerator.GenerateFunction($"{_labelTuple.className}.{_labelTuple.subroutineName}", SubroutineSymbolTable.NumberOfVariables());
         CodeLines.AddLast(commandString);
+        if (constructor)
+        {
+            // push the number of fields
+            var numberOfFields = ClassSymbolTable.NumberOfFields().ToString();
+            CodeLines.AddLast(VmCommandGenerator.GeneratePushConstantCommand(numberOfFields));
+            // use alloc to allocate memory
+            CodeLines.AddLast(VmCommandGenerator.GenerateCall("Memory.alloc", 1));
+            // set pointer 0 (the 'this' base address) to the return value
+            CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand("pointer", 0));
+        }
         // Handle statements
         
         if (_statementKeywords.Contains(CurrentToken.TokenValue))
@@ -437,9 +451,8 @@ public class VmCompilationEngine : ICompilationEngine
             }
             else
             {
-                throw new NotImplementedException("This keyword is not implemented");
+                CodeLines.AddLast(VmCommandGenerator.GeneratePushCommand("pointer", 0));
             }
-            // push this onto the stack
         }
         // Handle indexed variable name
         else if (CurrentToken.TokenValue == "[")

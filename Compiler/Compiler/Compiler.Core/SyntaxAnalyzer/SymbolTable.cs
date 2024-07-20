@@ -84,6 +84,13 @@ public class SymbolTable
         return counter;
     }
     
-    
-    
+    public int NumberOfFields()
+    {
+        var counter = 0;
+        foreach (var (key, value) in _symbolTable)
+        {
+            if (value.Kind is "field") counter++;
+        }
+        return counter;
+    }
 }

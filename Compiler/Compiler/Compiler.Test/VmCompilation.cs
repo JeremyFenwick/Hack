@@ -113,4 +113,22 @@ public class VmCompilation
         
         Assert.That(compilationEngine.CodeLines.Last!.Value, Is.EqualTo("return"));
     }
+    
+    [Test]
+    public void Constructortest()
+    {
+        var codeList = new List<string>
+        {
+            "class main {",
+            "    field int x, y;",
+            "    function void main(int ax, int ay) {",
+            "        ",
+            "    }",
+            "}"
+        };
+        var compilationEngine = GenerateCompilationEngine(codeList);
+        compilationEngine.BeginCompilationRoutine();
+        
+        Assert.That(compilationEngine.CodeLines.Last!.Value, Is.EqualTo("return"));
+    }
 }
