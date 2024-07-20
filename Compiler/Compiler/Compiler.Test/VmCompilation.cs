@@ -115,14 +115,38 @@ public class VmCompilation
     }
     
     [Test]
-    public void Constructortest()
+    public void ConstructorTest()
     {
         var codeList = new List<string>
         {
-            "class main {",
+            "class Point {",
             "    field int x, y;",
-            "    function void main(int ax, int ay) {",
-            "        ",
+            "    constructor Point new(int ax, int ay) {",
+            "        let x = ax;",
+            "        let y = ay;",
+            "        return this;",
+            "    }",
+            "}"
+        };
+        var compilationEngine = GenerateCompilationEngine(codeList);
+        compilationEngine.BeginCompilationRoutine();
+        
+        Assert.That(compilationEngine.CodeLines.Last!.Value, Is.EqualTo("return"));
+    }
+    
+    [Test]
+    public void ConstructorWithStaticsTest()
+    {
+        var codeList = new List<string>
+        {
+            "class Point {",
+            "    field int x, y;",
+            "    static int pointCount;",
+            "    constructor Point new(int ax, int ay) {",
+            "        let x = ax;",
+            "        let y = ay;",
+            "        let pointCount = pointCount + 1;",
+            "        return this;",
             "    }",
             "}"
         };

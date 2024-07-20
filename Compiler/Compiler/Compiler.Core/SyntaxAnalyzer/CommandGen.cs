@@ -2,24 +2,24 @@
 
 namespace Compiler.Core.SyntaxAnalyzer;
 
-public static class VmCommandGenerator
+public static class CommandGen
 {
-    public static string GeneratePushCommand(string segment, int index)
+    public static string Push(string segment, int index)
     {
         return $"push {segment} {index}";
     }
 
-    public static string GeneratePopCommand(string segment, int index)
+    public static string Pop(string segment, int index)
     {
         return $"pop {segment} {index}";
     }
 
-    public static string GeneratePushConstantCommand(string constant)
+    public static string PushConstant(string constant)
     {
         return $"push constant {constant.ToString().ToLower()}";
     }
 
-    public static string GenerateArithmetic(Command command)
+    public static string Arithmetic(Command command)
     {
         return command switch
         {
@@ -37,32 +37,32 @@ public static class VmCommandGenerator
         };
     }
 
-    public static string GenerateLabel(string label)
+    public static string Label(string label)
     {
         return $"label {label}";
     }
 
-    public static string GenerateGoto(string destination)
+    public static string Goto(string destination)
     {
         return $"goto {destination}";
     }
 
-    public static string GenerateIfGoto(string destination)
+    public static string IfGoto(string destination)
     {
         return $"if-goto {destination}";
     }
 
-    public static string GenerateCall(string name, int variables)
+    public static string Call(string name, int variables)
     {
         return $"call {name} {variables}";
     }
     
-    public static string GenerateFunction(string name, int variables)
+    public static string Function(string name, int variables)
     {
         return $"function {name} {variables}";
     }
 
-    public static string GenerateReturn()
+    public static string Return()
     {
         return "return";
     }

@@ -113,11 +113,7 @@ public class VmCompilationEngine : ICompilationEngine
     private void ClassSubroutineDeclaration(string className)
     {
         // function or method or constructor
-        if (CurrentToken.TokenValue == "method")
-        {
-            SubroutineSymbolTable.AddSymbol("this", "argument", className);
-        }
-        var constructor = CurrentToken.TokenValue == "constructor";
+        var subroutine = CurrentToken.TokenValue;
         NextToken();
         // void
         NextToken();
@@ -153,7 +149,7 @@ public class VmCompilationEngine : ICompilationEngine
         _labelTuple.subroutineName = $"{functionName}";
         _labelTuple.Index = 0;
         
-        SubroutineBody(constructor);
+        SubroutineBody(subroutine);
 
         if (!_debug)
         {
@@ -161,11 +157,14 @@ public class VmCompilationEngine : ICompilationEngine
         }
     }
 
-    private void SubroutineBody(bool constructor)
+    private void SubroutineBody(string subroutineType)
     {
+        if (subroutineType == "method")
+        {
+            SubroutineSymbolTable.AddSymbol("this", "argument", _labelTuple.className);
+        }
         // {
         NextToken();
-        
         // Handle variable declarations
         while (true)
         {
@@ -175,17 +174,24 @@ public class VmCompilationEngine : ICompilationEngine
             }
             SubroutineVariableDeclaration();
         }
-        var commandString = VmCommandGenerator.GenerateFunction($"{_labelTuple.className}.{_labelTuple.subroutineName}", SubroutineSymbolTable.NumberOfVariables());
+        var commandString = CommandGen.Function($"{_labelTuple.className}.{_labelTuple.subroutineName}", SubroutineSymbolTable.NumberOfVariables());
         CodeLines.AddLast(commandString);
-        if (constructor)
+        if (subroutineType == "constructor")
         {
             // push the number of fields
             var numberOfFields = ClassSymbolTable.NumberOfFields().ToString();
-            CodeLines.AddLast(VmCommandGenerator.GeneratePushConstantCommand(numberOfFields));
+            CodeLines.AddLast(CommandGen.PushConstant(numberOfFields));
             // use alloc to allocate memory
-            CodeLines.AddLast(VmCommandGenerator.GenerateCall("Memory.alloc", 1));
+            CodeLines.AddLast(CommandGen.Call("Memory.alloc", 1));
             // set pointer 0 (the 'this' base address) to the return value
-            CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand("pointer", 0));
+            CodeLines.AddLast(CommandGen.Pop("pointer", 0));
+        }
+        if (subroutineType == "method")
+        {            
+            // push the first argument onto the stack
+            CodeLines.AddLast(CommandGen.Push("argument", 0));
+            // pop argument 0 into pointer 0
+            CodeLines.AddLast(CommandGen.Pop("pointer", 0));
         }
         // Handle statements
         
@@ -234,13 +240,13 @@ public class VmCompilationEngine : ICompilationEngine
         if (CurrentToken.TokenValue != ";")
         {
             Expression();
-            CodeLines.AddLast(VmCommandGenerator.GenerateReturn());
+            CodeLines.AddLast(CommandGen.Return());
         }
         else
         {
             // add a dummy value to the stack, since we must return something
-            CodeLines.AddLast(VmCommandGenerator.GeneratePushConstantCommand("0"));
-            CodeLines.AddLast(VmCommandGenerator.GenerateReturn());
+            CodeLines.AddLast(CommandGen.PushConstant("0"));
+            CodeLines.AddLast(CommandGen.Return());
         }
         NextToken();
     }
@@ -264,33 +270,36 @@ public class VmCompilationEngine : ICompilationEngine
             // )
             NextToken();
             
-            var commandString = VmCommandGenerator.GenerateCall($"{_labelTuple.className}.{functionName}", numberOfArguments);
+            var commandString = CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments);
             CodeLines.AddLast(commandString);
         }
-        // Handle alternate subroutine call
+        // Handle alternate subroutine call (method)
         else
         {
             // class
             var className = lastToken.TokenValue;
             // .
             NextToken();
-            // functionName
-            var functionName = CurrentToken.TokenValue;
+            // method
+            var method = CurrentToken.TokenValue;
             NextToken();
+            // first argument should be the memory address of the object
+            var symbol = FetchSymbol(className);
+            var segment = KindToSegment(symbol.Kind);
+            CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
             // (
             NextToken();
             // Expressions
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
-            var commandString = VmCommandGenerator.GenerateCall($"{className}.{functionName}", numberOfArguments);
+            var commandString = CommandGen.Call($"{className}.{method}", numberOfArguments + 1);
             CodeLines.AddLast(commandString);
-
         }
         // ;
         NextToken();
         // do expressions do not care about the return values, so pop the stack to temp 0
-        CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand("temp", 0));
+        CodeLines.AddLast(CommandGen.Pop("temp", 0));
     }
 
     private void WhileStatement()
@@ -304,19 +313,19 @@ public class VmCompilationEngine : ICompilationEngine
         NextToken();
         // (
         NextToken();
-        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelOne));
+        CodeLines.AddLast(CommandGen.Label(labelOne));
         Expression();
-        CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Not));
-        CodeLines.AddLast(VmCommandGenerator.GenerateIfGoto(labelTwo));
+        CodeLines.AddLast(CommandGen.Arithmetic(Command.Not));
+        CodeLines.AddLast(CommandGen.IfGoto(labelTwo));
         // )
         NextToken();
         // {
         NextToken();
         StatementLoop();
-        CodeLines.AddLast(VmCommandGenerator.GenerateGoto(labelOne));
+        CodeLines.AddLast(CommandGen.Goto(labelOne));
         // }
         NextToken();
-        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelTwo));
+        CodeLines.AddLast(CommandGen.Label(labelTwo));
     }
 
     private void IfStatement()
@@ -334,15 +343,15 @@ public class VmCompilationEngine : ICompilationEngine
         // )
         NextToken();
         // Push not to invert the statement result
-        CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Not));
+        CodeLines.AddLast(CommandGen.Arithmetic(Command.Not));
         // {
         NextToken();
-        CodeLines.AddLast(VmCommandGenerator.GenerateIfGoto(labelOne));
+        CodeLines.AddLast(CommandGen.IfGoto(labelOne));
         StatementLoop();
-        CodeLines.AddLast(VmCommandGenerator.GenerateGoto(labelTwo));
+        CodeLines.AddLast(CommandGen.Goto(labelTwo));
         // }
         NextToken();
-        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelOne));
+        CodeLines.AddLast(CommandGen.Label(labelOne));
         if (CurrentToken.TokenValue == "else")
         {
             // else
@@ -354,7 +363,7 @@ public class VmCompilationEngine : ICompilationEngine
             // }
             NextToken();
         }
-        CodeLines.AddLast(VmCommandGenerator.GenerateLabel(labelTwo));
+        CodeLines.AddLast(CommandGen.Label(labelTwo));
     }
 
     private void LetStatement()
@@ -380,7 +389,7 @@ public class VmCompilationEngine : ICompilationEngine
         NextToken();
         var symbol = FetchSymbol(varName);
         var segment = KindToSegment(symbol.Kind);
-        CodeLines.AddLast(VmCommandGenerator.GeneratePopCommand(segment, symbol.Index));
+        CodeLines.AddLast(CommandGen.Pop(segment, symbol.Index));
     }
     
     private void Expression()
@@ -395,7 +404,7 @@ public class VmCompilationEngine : ICompilationEngine
                 var op = CurrentToken.TokenValue;
                 NextToken();
                 Term();
-                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(_ops[op]));
+                CodeLines.AddLast(CommandGen.Arithmetic(_ops[op]));
             }
             break;
         }
@@ -410,7 +419,7 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle integer constant
         if (lastToken.TokenType == TokenType.IntConst)
         {
-            CodeLines.AddLast(VmCommandGenerator.GeneratePushConstantCommand(lastToken.TokenValue));
+            CodeLines.AddLast(CommandGen.PushConstant(lastToken.TokenValue));
         } 
         // Handle string constant
         else if (lastToken.TokenType == TokenType.StringConst)
@@ -430,11 +439,11 @@ public class VmCompilationEngine : ICompilationEngine
             Term();
             if (lastToken.TokenValue == "~")
             {
-                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Not));
+                CodeLines.AddLast(CommandGen.Arithmetic(Command.Not));
             }
             else
             {
-                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Negative));
+                CodeLines.AddLast(CommandGen.Arithmetic(Command.Negative));
             }
         }
         // Handle keyword constant
@@ -442,16 +451,16 @@ public class VmCompilationEngine : ICompilationEngine
         {
             if (lastToken.TokenValue is "false" or "null")
             {
-                CodeLines.AddLast(VmCommandGenerator.GeneratePushCommand("constant", 0));
+                CodeLines.AddLast(CommandGen.Push("constant", 0));
             } 
             else if (lastToken.TokenValue is "true")
             {
-                CodeLines.AddLast(VmCommandGenerator.GeneratePushCommand("constant", 1));
-                CodeLines.AddLast(VmCommandGenerator.GenerateArithmetic(Command.Negative));
+                CodeLines.AddLast(CommandGen.Push("constant", 1));
+                CodeLines.AddLast(CommandGen.Arithmetic(Command.Negative));
             }
             else
             {
-                CodeLines.AddLast(VmCommandGenerator.GeneratePushCommand("pointer", 0));
+                CodeLines.AddLast(CommandGen.Push("pointer", 0));
             }
         }
         // Handle indexed variable name
@@ -462,7 +471,7 @@ public class VmCompilationEngine : ICompilationEngine
             Expression();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
         }
-        // Subroutine call. Inlined for clarity as separating creates a mess
+        // Function call. Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
         {
             var functionName = lastToken.TokenValue;
@@ -471,29 +480,33 @@ public class VmCompilationEngine : ICompilationEngine
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
-            CodeLines.AddLast(VmCommandGenerator.GenerateCall($"{_labelTuple.className}.{functionName}", numberOfArguments));
+            CodeLines.AddLast(CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments));
         }
-        // Handle alternate subroutine call
+        // Handle method call
         else if (CurrentToken.TokenValue == ".")
         {
             var className = lastToken.TokenValue;
             // .
             NextToken();
             // function Name
-            var functionName = CurrentToken.TokenValue; 
+            var method = CurrentToken.TokenValue; 
             NextToken();
+            // The first argument must be the memory address of the target object
+            var symbol = FetchSymbol(className);
+            var segment = KindToSegment(symbol.Kind);
+            CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
             // (
             NextToken();
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
-            CodeLines.AddLast(VmCommandGenerator.GenerateCall($"{className}.{functionName}", numberOfArguments));
+            CodeLines.AddLast(CommandGen.Call($"{className}.{method}", numberOfArguments + 1));
         }
         // Handle the varName case
         else
         {
             var symbol = FetchSymbol(lastToken.TokenValue);
-            var command = VmCommandGenerator.GeneratePushCommand(KindToSegment(symbol.Kind), symbol.Index);
+            var command = CommandGen.Push(KindToSegment(symbol.Kind), symbol.Index);
             CodeLines.AddLast(command);
         }
     }
