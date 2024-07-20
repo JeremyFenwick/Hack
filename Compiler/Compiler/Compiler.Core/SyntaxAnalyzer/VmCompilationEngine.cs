@@ -259,41 +259,48 @@ public class VmCompilationEngine : ICompilationEngine
         var lastToken = CurrentToken;
         NextToken();
 
-        // Handle subroutine call. Inlined for clarity as separating creates a mess
+        // Handle method call. Inlined for clarity as separating creates a mess
         if (CurrentToken.TokenValue == "(")
         {
             // fun
             var functionName = lastToken.TokenValue;
+            // push pointer 0 onto the stack
+            CodeLines.AddLast(CommandGen.Push("pointer", 0));
             // (
             NextToken();
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
             
-            var commandString = CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments);
+            var commandString = CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments + 1);
             CodeLines.AddLast(commandString);
         }
         // Handle alternate subroutine call (method)
         else
-        {
+        {            
             // class
-            var className = lastToken.TokenValue;
+            string className = lastToken.TokenValue;
+            var isMethod = SymbolExists(className);
             // .
             NextToken();
             // method
             var method = CurrentToken.TokenValue;
             NextToken();
-            // first argument should be the memory address of the object
-            var symbol = FetchSymbol(className);
-            var segment = KindToSegment(symbol.Kind);
-            CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
             // (
             NextToken();
-            // Expressions
+            // Expressions 
+            if (isMethod)
+            {
+                var symbol = FetchSymbol(className);
+                className = symbol.Type;
+                var segment = KindToSegment(symbol.Kind);
+                CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
+            }
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
-            var commandString = CommandGen.Call($"{className}.{method}", numberOfArguments + 1);
+            if (isMethod) numberOfArguments++;
+            var commandString = CommandGen.Call($"{className}.{method}", numberOfArguments);
             CodeLines.AddLast(commandString);
         }
         // ;
@@ -471,36 +478,45 @@ public class VmCompilationEngine : ICompilationEngine
             Expression();
             TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
         }
-        // Function call. Inlined for clarity as separating creates a mess
+        // Method call. Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
         {
             var functionName = lastToken.TokenValue;
+            // push the pointer onto the stack
+            CodeLines.AddLast(CommandGen.Push("pointer", 0));
             // (
             NextToken();
             var numberOfArguments = ExpressionList();
             // )
             NextToken();
-            CodeLines.AddLast(CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments));
+            CodeLines.AddLast(CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments + 1));
         }
-        // Handle method call
+        // Handle method or function call
         else if (CurrentToken.TokenValue == ".")
         {
-            var className = lastToken.TokenValue;
-            // .
+            // class
+            string className = lastToken.TokenValue;
+            var isMethod = SymbolExists(className);
             NextToken();
-            // function Name
+            // function/method Name
             var method = CurrentToken.TokenValue; 
             NextToken();
             // The first argument must be the memory address of the target object
-            var symbol = FetchSymbol(className);
-            var segment = KindToSegment(symbol.Kind);
-            CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
+            // This only happens if we are not calling a constructor with 'new'
+            if (isMethod)
+            {
+                var symbol = FetchSymbol(className);
+                className = symbol.Type;
+                var segment = KindToSegment(symbol.Kind);
+                CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
+            }
             // (
             NextToken();
             var numberOfArguments = ExpressionList();
+            if (isMethod) numberOfArguments++;
             // )
             NextToken();
-            CodeLines.AddLast(CommandGen.Call($"{className}.{method}", numberOfArguments + 1));
+            CodeLines.AddLast(CommandGen.Call($"{className}.{method}", numberOfArguments));
         }
         // Handle the varName case
         else
@@ -568,6 +584,19 @@ public class VmCompilationEngine : ICompilationEngine
         else
         {
             throw new Exception($"Could not fetch unknown symbol name: {symbolName}");
+        }
+    }
+
+    private bool SymbolExists(string symbolName)
+    {
+        var result = SubroutineSymbolTable.ContainsSymbolName(symbolName);
+        if (result == false)
+        {
+            return ClassSymbolTable.ContainsSymbolName(symbolName);
+        }
+        else
+        {
+            return true;
         }
     }
 

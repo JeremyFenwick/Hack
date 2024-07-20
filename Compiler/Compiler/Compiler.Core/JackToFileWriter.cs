@@ -82,10 +82,17 @@ public class JackToFileWriter
     {
         var fileList = Directory.GetFiles(_fileOrDirectory);
         
+        // Append all the other files
         foreach (var file in fileList)
         {
-            _logger.LogInformation($"Parsing file: {file}");
             List<string> rawCode;
+
+            _logger.LogInformation($"Parsing file: {file}");
+            var outputFile =
+                $"{Path.GetDirectoryName(file)}\\{Path.GetFileNameWithoutExtension(file)}{_outputFileExtension}";
+            var newFs = File.Create(outputFile);
+            newFs.Close();
+            
             if (Path.GetExtension(file) != ".jack") continue;
             // Attempt to load the file
             try
@@ -96,20 +103,16 @@ public class JackToFileWriter
             {
                 throw new Exception(e.Message);
             }
-            // Create the output file
-
-            var outputFile = $"{Path.GetDirectoryName(file)}\\{Path.GetFileNameWithoutExtension(file)}{_outputFileExtension}"; 
-            var newFs = File.Create(outputFile);
-            newFs.Close();
-            // Now generate the xml file
+            // Now generate the code
             var compilationEngine = GenerateCompilationEngine(rawCode);
             compilationEngine.BeginCompilationRoutine();
         
-            using var streamWriter = File.AppendText(outputFile);
+            var streamWriter = File.AppendText(outputFile);
             foreach (var line in compilationEngine.CodeLines)
             {
                 streamWriter.WriteLine(line);
             }
+            streamWriter.Close();
         }
     }
 }
