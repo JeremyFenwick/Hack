@@ -1,0 +1,17 @@
+class Main {
+  
+    function void main() {
+	    var int value;
+      let value = 10;
+      do printLoop(10);
+      return;
+    }
+
+    function void printLoop(int value) {
+      while (value > 0) {
+          do Output.printInt(value);
+          let value = value - 1;
+      }
+      return;
+    }
+}

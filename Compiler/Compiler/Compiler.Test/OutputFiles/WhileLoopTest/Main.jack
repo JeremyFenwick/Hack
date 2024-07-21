@@ -1,0 +1,15 @@
+class Main {
+  
+    function void main() {
+	    var int value, secondValue;
+      let value = 10;
+      let secondValue = 20;
+      do PrintInt(value, secondValue);
+      return;
+    }
+
+    function void PrintInt(int value, int secondValue) {
+      do Output.printInt(value + secondValue);
+      return;
+    }
+}

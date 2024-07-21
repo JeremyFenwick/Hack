@@ -1,0 +1,14 @@
+class Point {
+   field int x, y; 
+
+   constructor Point new(int ax, int ay) {
+      let x = ax;
+      let y = ay;
+      return this;
+   }
+
+    method void Print(int z) {
+      do Output.printInt((x + z));
+      return;
+   }
+}

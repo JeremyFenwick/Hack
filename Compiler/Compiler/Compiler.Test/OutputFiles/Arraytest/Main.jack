@@ -1,0 +1,18 @@
+class Main {
+   function void main() {
+      var Array arr; 
+
+      let arr = Array.new(4); 
+      let arr[0] = 10;
+      let arr[1] = 20;
+      let arr[2] = 30;
+      let arr[3] = 40;
+
+      do Output.printInt(arr[0]);
+      do Output.printInt(arr[1]);
+      do Output.printInt(arr[2]);
+      do Output.printInt(arr[3]);
+
+      return;
+   }
+}

@@ -112,6 +112,10 @@ public class VmCompilationEngine : ICompilationEngine
     {
         // function or method or constructor
         var subroutine = CurrentToken.TokenValue;
+        if (subroutine == "method")
+        {
+            SubroutineSymbolTable.AddSymbol("this", "argument", _labelTuple.className);
+        }
         NextToken();
         // void
         NextToken();
@@ -157,10 +161,6 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void SubroutineBody(string subroutineType)
     {
-        if (subroutineType == "method")
-        {
-            SubroutineSymbolTable.AddSymbol("this", "argument", _labelTuple.className);
-        }
         // {
         NextToken();
         // Handle variable declarations
@@ -223,7 +223,7 @@ public class VmCompilationEngine : ICompilationEngine
                     ReturnStatement();
                     break;
                 default:
-                    throw new Exception("Unknown statement type");
+                    throw new Exception($"Unknown statement type: {CurrentToken.TokenValue}");
             }
             if (CurrentToken.TokenValue == "}") break;
             

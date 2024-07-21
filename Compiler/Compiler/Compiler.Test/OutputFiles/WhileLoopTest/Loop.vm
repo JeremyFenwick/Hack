@@ -1,0 +1,26 @@
+function Main.main 1
+push constant 10
+pop local 0
+push constant 10
+call Main.printLoop 1
+pop temp 0
+push constant 0
+return
+function Main.printLoop 0
+label Main.printLoop-1
+push argument 0
+push constant 0
+gt
+not
+if-goto Main.printLoop-2
+push argument 0
+call Output.printInt 1
+pop temp 0
+push argument 0
+push constant 1
+sub
+pop argument 0
+goto Main.printLoop-1
+label Main.printLoop-2
+push constant 0
+return

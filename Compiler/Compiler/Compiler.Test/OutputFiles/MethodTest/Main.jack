@@ -1,0 +1,8 @@
+class Main {
+    function void main() {
+        var Point point;
+        let point = Point.new(10, 20);
+        do point.Print(30);
+        return;
+    }
+}
