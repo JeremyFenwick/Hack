@@ -9,7 +9,6 @@ public class VmCompilationEngine : ICompilationEngine
 {
     private ITokenizer _tokenizer;
     private ILogger _logger;
-    private byte _indentationLevel;
     private readonly List<string> _statementKeywords = ["let", "if", "while", "do", "return"];
     private readonly Dictionary<string, Command> _ops = new()
     {
@@ -36,7 +35,6 @@ public class VmCompilationEngine : ICompilationEngine
         _logger = logger;
         _tokenizer = tokenizer;
         CodeLines = new LinkedList<string>();
-        _indentationLevel = 0;
         CurrentToken = null!;
         ClassSymbolTable = new SymbolTable();
         SubroutineSymbolTable = new SymbolTable();
@@ -255,54 +253,8 @@ public class VmCompilationEngine : ICompilationEngine
     {
         // do
         NextToken();
-        // This function is LL(2) so we need to look ahead to know what to do
-        var lastToken = CurrentToken;
-        NextToken();
-
-        // Handle method call. Inlined for clarity as separating creates a mess
-        if (CurrentToken.TokenValue == "(")
-        {
-            // fun
-            var functionName = lastToken.TokenValue;
-            // push pointer 0 onto the stack
-            CodeLines.AddLast(CommandGen.Push("pointer", 0));
-            // (
-            NextToken();
-            var numberOfArguments = ExpressionList();
-            // )
-            NextToken();
-            
-            var commandString = CommandGen.Call($"{_labelTuple.className}.{functionName}", numberOfArguments + 1);
-            CodeLines.AddLast(commandString);
-        }
-        // Handle alternate subroutine call (method)
-        else
-        {            
-            // class
-            string className = lastToken.TokenValue;
-            var isMethod = SymbolExists(className);
-            // .
-            NextToken();
-            // method
-            var method = CurrentToken.TokenValue;
-            NextToken();
-            // (
-            NextToken();
-            // Expressions 
-            if (isMethod)
-            {
-                var symbol = FetchSymbol(className);
-                className = symbol.Type;
-                var segment = KindToSegment(symbol.Kind);
-                CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
-            }
-            var numberOfArguments = ExpressionList();
-            // )
-            NextToken();
-            if (isMethod) numberOfArguments++;
-            var commandString = CommandGen.Call($"{className}.{method}", numberOfArguments);
-            CodeLines.AddLast(commandString);
-        }
+        // term
+        Term();
         // ;
         NextToken();
         // do expressions do not care about the return values, so pop the stack to temp 0
@@ -375,28 +327,45 @@ public class VmCompilationEngine : ICompilationEngine
 
     private void LetStatement()
     {
+        var arrayIndexing = false;
         // let
         NextToken();
         // varName
         var varName = CurrentToken.TokenValue;
+        var symbol = FetchSymbol(varName);
+        var segment = KindToSegment(symbol.Kind);
+        
         NextToken();
         if (CurrentToken.TokenValue == "[")
         {
-            throw new NotImplementedException("Have not implemented arrays");
+            arrayIndexing = true;
+            // push arr onto the stack
+            CodeLines.AddLast(CommandGen.Push(segment, symbol.Index));
             // [
             NextToken();
             Expression();
+            // add arr + exp1
+            CodeLines.AddLast(CommandGen.Arithmetic(Command.Add));
             // ]
             NextToken();
         }
         // =
         NextToken();
         Expression();
+        if (arrayIndexing)
+        {
+            // exp2 to temp 0
+            CodeLines.AddLast(CommandGen.Pop("temp", 0));
+            CodeLines.AddLast(CommandGen.Pop("pointer", 1));
+            CodeLines.AddLast(CommandGen.Push("temp", 0));
+            CodeLines.AddLast(CommandGen.Pop("that", 0));
+        }
+        else
+        {
+            CodeLines.AddLast(CommandGen.Pop(segment, symbol.Index));
+        }
         // ;
         NextToken();
-        var symbol = FetchSymbol(varName);
-        var segment = KindToSegment(symbol.Kind);
-        CodeLines.AddLast(CommandGen.Pop(segment, symbol.Index));
     }
     
     private void Expression()
@@ -431,7 +400,27 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle string constant
         else if (lastToken.TokenType == TokenType.StringConst)
         {
-            TokenToXmlLine(lastToken, false);
+            var stringLength = lastToken.TokenValue.Length;
+            // push string length onto stack
+            CodeLines.AddLast(CommandGen.PushConstant($"{stringLength}"));
+            // string address is now on the stack
+            CodeLines.AddLast(CommandGen.Call("String.new", 1));
+            // store the object address in temp 0
+            CodeLines.AddLast(CommandGen.Pop("temp", 0));
+            // cycle up to the last character
+            for (var i = 0; i < stringLength - 1; i++)
+            {
+                CodeLines.AddLast(CommandGen.Push("temp", 0));
+                var characterCode = (int)lastToken.TokenValue[i];
+                CodeLines.AddLast(CommandGen.PushConstant($"{characterCode}"));
+                CodeLines.AddLast(CommandGen.Call("String.appendChar", 2));
+                CodeLines.AddLast(CommandGen.Pop("temp", 1));
+            }
+            // handle the last character. appendChar will return the final string
+            CodeLines.AddLast(CommandGen.Push("temp", 0));
+            var lastCharacter = (int)lastToken.TokenValue[stringLength - 1];
+            CodeLines.AddLast(CommandGen.PushConstant($"{lastCharacter}"));
+            CodeLines.AddLast(CommandGen.Call("String.appendChar", 2));
         }
         // Handle nested expression
         else if (lastToken.TokenValue == "(")
@@ -473,10 +462,18 @@ public class VmCompilationEngine : ICompilationEngine
         // Handle indexed variable name
         else if (CurrentToken.TokenValue == "[")
         {
-            TokenToXmlLine(lastToken, false);
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "[");
+            // push arr onto the stack
+            var symbol = FetchSymbol(lastToken.TokenValue);
+            CodeLines.AddLast(CommandGen.Push(KindToSegment(symbol.Kind), symbol.Index));
+            // [
+            NextToken();
             Expression();
-            TokenToXmlLine(CurrentToken, TokenType.Symbol, "]");
+            // add arr + exp1
+            CodeLines.AddLast(CommandGen.Arithmetic(Command.Add));
+            CodeLines.AddLast(CommandGen.Pop("pointer", 1));
+            CodeLines.AddLast(CommandGen.Push("that", 0));
+            // ]
+            NextToken();
         }
         // Method call. Inlined for clarity as separating creates a mess
         else if (CurrentToken.TokenValue == "(")
@@ -612,57 +609,10 @@ public class VmCompilationEngine : ICompilationEngine
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
-    
-    private void TokenToXmlLine(Token token, TokenType expectedTokenType, string expectedValue)
-    {
-        if (token.TokenType != expectedTokenType)
-        {
-            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenType. Expected: {expectedTokenType}, Actual: {token.TokenType}");
-        }
-        if (expectedValue != token.TokenValue)
-        {
-            TerminateCompilationRoutine("COMPILATION ENGINE: " + $"Token - {token.TokenValue} did not have the expected TokenValue. Expected: {expectedValue}, Actual: {token.TokenValue}");
-        }
-
-        CodeLines.AddLast(XmlFormatter(token));
-        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-        NextToken();
-    }
-    
-    private void TokenToXmlLine(Token token, bool advanceToken)
-    {
-        CodeLines.AddLast(XmlFormatter(token));
-        _logger.LogDebug("COMPILATION ENGINE: " + $"Adding token to xml line: {CurrentToken.TokenValue}");
-
-        if (advanceToken)
-        {
-            NextToken();
-        }
-    }
 
     private void NextToken()
     {
         _tokenizer.Advance();
         CurrentToken = _tokenizer.CurrentToken;
-    }
-
-    private void WriteXmlLine(bool closingTag, string line)
-    {
-        var indentationSpacing = new string('\t', _indentationLevel);
-        CodeLines.AddLast(!closingTag ? $"{indentationSpacing}<{line}>" : $"{indentationSpacing}</{line}>");
-        _logger.LogDebug($"Adding token to xml line: {CurrentToken.TokenValue}");
-    }
-
-    private void TerminateCompilationRoutine(string message)
-    {
-        _logger.LogCritical("COMPILATION ENGINE: " + message);
-        Console.ReadLine();
-        Environment.Exit(1);
-    }
-
-    private string XmlFormatter(Token token)
-    {
-        var indentationSpacing = new string('\t', _indentationLevel);
-        return $"{indentationSpacing}<{token.TokenType.ToString().ToLower()}> {token.TokenValue} </{token.TokenType.ToString().ToLower()}>";
     }
 }

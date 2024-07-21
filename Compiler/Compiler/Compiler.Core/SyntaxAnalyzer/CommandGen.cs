@@ -25,6 +25,7 @@ public static class CommandGen
         {
             Command.Add => "add",
             Command.Multiply => "call Math.multiply 2",
+            Command.Divide => "call Math.divide 2",
             Command.Subtract => "sub",
             Command.Negative => "neg",
             Command.Equal => "eq",
