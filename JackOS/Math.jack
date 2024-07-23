@@ -9,7 +9,7 @@
  *  Note: Jack compilers implement multiplication and division
  *  using calls to OS functions in this class.
  */
-class Main {
+class Math {
     static int n;             // Number of bits used for representing a two's complement integer
     static Array powersOfTwo; // Stores 2^0, 2^1, 2^2,..., 2^(n-1)
 
@@ -33,7 +33,7 @@ class Main {
         return;
     }
 
-    /** Returns the product of x and y. 
+        /** Returns the product of x and y. 
      *  When a Jack compiler detects the multiplication operator '*'
      *  in an expression, it handles it by invoking this method. 
      *  Thus, in Jack, x * y and Math.multiply(x,y) return the same value. */
@@ -74,6 +74,7 @@ class Main {
         else {
             return -result;
         }
+        
     }
 
     function int divide_core(int x, int y) {
@@ -83,9 +84,13 @@ class Main {
             return 0;
         }
 
-        let quotient = Math.divide_core(x, y + y);
+        if (y < 0) {
+            return 0;
+        }
 
-        if (x - (Math.multiply(quotient + quotient, y)) < y) {
+        let quotient = Math.divide_core(x, Math.multiply(2, y));
+
+        if ((x - Math.multiply(quotient + quotient, y)) < y) {
             return Math.multiply(2, quotient);
         } else {
             return Math.multiply(2, quotient) + 1;
@@ -95,20 +100,22 @@ class Main {
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        var int y, index, temp;
+        var int y, index, temp, tempSquared;
         
-        let index = n - 1;
+        let index = Math.divide(n, 2) - 1;
 
-        while (index > -1) {
+        while ( index > -1 ) {
+
             let temp = y + (Math.power(2, index));
+            let tempSquared = Math.power(temp, 2);
 
-            if (power(temp, 2) < x) {
-                let y = y + (Math.power(2, index));
+            if (tempSquared > 0){
+                if ((tempSquared < x) | (tempSquared = x) ) {
+                    let y = y + (Math.power(2, index));
+                }
             }
 
-            if (power(temp, 2) = x) {
-                let y = y + (Math.power(2, index));
-            }
+            let index = index - 1;
         }
 
         return y;
@@ -151,11 +158,11 @@ class Main {
         let indexNumber = powersOfTwo[index];
         let result = indexNumber & number;
 
-        return result > 0;
+        return ~(result = 0);
     }
 
     function int power(int number, int raised_to) {
-        var int result, index;
+        var int result, index, stop;
         
         if (raised_to = 0) {
             return 1;
@@ -163,9 +170,11 @@ class Main {
 
         let result = number;
         let index = 0;
+        let stop = raised_to - 1;
 
-        while (index < (raised_to - 1)) {
+        while (index < stop) {
             let result = Math.multiply(number, result);
+            let index = index + 1;
         }
         
         return result;
