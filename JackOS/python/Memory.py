@@ -1,5 +1,6 @@
 ﻿import numpy
 
+#
 class Memory:
     ram: []
     freelist: int
@@ -18,7 +19,7 @@ class Memory:
         while True:
             attempted_defragmentation = False
             # If a candidate was found
-            if self.ram[candidate_node + 1] > size + 2:
+            if self.ram[candidate_node + 1] > size + 4:
                 destination = self.ram[candidate_node]
                 previous_size = self.ram[candidate_node + 1]
 

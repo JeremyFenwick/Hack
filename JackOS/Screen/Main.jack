@@ -1,0 +1,22 @@
+class Main {
+  function void main() 
+  {
+    // do Screen.drawPixel(0, 0);
+    // do Screen.drawPixel(1, 0);
+    // do Screen.drawPixel(2, 0);
+    // do Screen.drawPixel(3, 0);
+    // do Screen.drawPixel(4, 0);
+    // do Screen.drawPixel(5, 0);
+    // do Screen.drawPixel(6, 0);
+    // do Screen.drawPixel(7, 0);
+    // do Screen.drawPixel(8, 0);
+    // do Screen.drawLine(1, 1, 50, 50);
+    // do Screen.drawLine(1, 1, 1, 50);
+
+    // do Screen.drawLine(100, 150, 100, 100);
+    // do Screen.drawRectangle(1, 1, 100, 100);
+
+    do Screen.drawCircle(100, 100, 60);
+    return;
+  }
+}
