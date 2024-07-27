@@ -10,54 +10,152 @@
  * string-oriented operations.
  */
 class String {
+    field int maxLength;
+    field int currentIndex;
+    field Array data;
 
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
-    constructor String new(int maxLength) {
+    constructor String new(int stringSize) {
+
+        if (stringSize = 0) {
+            let maxLength = 1;
+        } else {
+            let maxLength = stringSize;
+        }
+
+        let data = Array.new(maxLength);
+        let currentIndex = 0;
+        return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
+        do Array.dispose(data);
+        return;
     }
 
     /** Returns the current length of this string. */
     method int length() {
+        return currentIndex;
     }
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
+        return data[j];
     }
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
+        if (j < maxLength) {
+            let data[j] = c;
+        }
+        return;
     }
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
+        if (currentIndex < maxLength) {
+            let data[currentIndex] = c;
+            let currentIndex = currentIndex + 1;
+        }
+
+        return this;
     }
 
     /** Erases the last character from this string. */
     method void eraseLastChar() {
+        if (currentIndex > 0) {
+            let currentIndex = currentIndex - 1;
+            let data[currentIndex] = 0;
+        }
+
+        return;
     }
 
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
+        var int index, value;
+
+        let index = 0;
+        let value = 0;
+
+        while (true) {
+            if (~(isDigit(data[index]))) {
+                return value;
+            }
+            let value = (value * 10) + charToInt(data[index]);
+            let index = index + 1;
+        }
+        return value;
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
+        let currentIndex = 0;
+
+        if (val < 0) {
+            let val = -val;
+            do appendChar(45);
+        }
+
+        do setInt_core(val);
+        return;
+    }
+
+    method void setInt_core(int val) {
+        var int lastDigit, currentIndex;
+        var char convertedChar;
+
+        let currentIndex = val;
+        let lastDigit = currentIndex - ((currentIndex / 10) * 10);
+        let convertedChar = intToChar(lastDigit);
+        let currentIndex = currentIndex / 10;
+
+
+        if (currentIndex > 10) {
+            do appendChar(convertedChar);
+        } else {
+             do setInt(currentIndex);
+             do appendChar(convertedChar);
+        }
+
+        return;
     }
 
     /** Returns the new line character. */
     function char newLine() {
+        return 128;
     }
 
     /** Returns the backspace character. */
     function char backSpace() {
+        return 129;
     }
 
     /** Returns the double quote (") character. */
     function char doubleQuote() {
+        return 34;
+    }
+
+    /** Returns the char value of the given integer (must have 0<=value<=9) */
+    function char intToChar(int i) {
+        return i + 48;
+    }
+
+    function int charToInt(char c){
+        return c - 48;
+    }
+
+        /** Returns whether the given char is a digit or not */
+    function boolean isDigit(char c) {
+        if (c < 48) {
+            return false;
+        }
+        if (c > 57) {
+            return false;
+        }
+        return true;
     }
 }

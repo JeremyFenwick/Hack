@@ -119,3 +119,8 @@ class Memory:
             else:
                 working_node = working_node + current_node_length + 2
                 continue
+
+mem = Memory(20)
+result = mem.alloc(2)
+mem.free(result)
+mem.alloc(3)
