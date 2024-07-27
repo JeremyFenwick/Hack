@@ -1,0 +1,275 @@
+function String.new 0
+push constant 3
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+push constant 0
+eq
+not
+if-goto String.new-1
+push constant 1
+pop this 0
+goto String.new-2
+label String.new-1
+push argument 0
+pop this 0
+label String.new-2
+push this 0
+call Array.new 1
+pop this 2
+push constant 0
+pop this 1
+push pointer 0
+return
+function String.dispose 0
+push argument 0
+pop pointer 0
+push this 2
+call Array.dispose 1
+pop temp 0
+push constant 0
+return
+function String.length 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function String.charAt 0
+push argument 0
+pop pointer 0
+push this 2
+push argument 1
+add
+pop pointer 1
+push that 0
+return
+function String.setCharAt 0
+push argument 0
+pop pointer 0
+push argument 1
+push this 0
+lt
+not
+if-goto String.setCharAt-1
+push this 2
+push argument 1
+add
+push argument 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+goto String.setCharAt-2
+label String.setCharAt-1
+label String.setCharAt-2
+push constant 0
+return
+function String.appendChar 0
+push argument 0
+pop pointer 0
+push this 1
+push this 0
+lt
+not
+if-goto String.appendChar-1
+push this 2
+push this 1
+add
+push argument 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push this 1
+push constant 1
+add
+pop this 1
+goto String.appendChar-2
+label String.appendChar-1
+label String.appendChar-2
+push pointer 0
+return
+function String.eraseLastChar 0
+push argument 0
+pop pointer 0
+push this 1
+push constant 0
+gt
+not
+if-goto String.eraseLastChar-1
+push this 1
+push constant 1
+sub
+pop this 1
+push this 2
+push this 1
+add
+push constant 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+goto String.eraseLastChar-2
+label String.eraseLastChar-1
+label String.eraseLastChar-2
+push constant 0
+return
+function String.intValue 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+push constant 0
+pop local 1
+label String.intValue-1
+push constant 1
+neg
+not
+if-goto String.intValue-2
+push pointer 0
+push this 2
+push local 0
+add
+pop pointer 1
+push that 0
+call String.isDigit 2
+not
+not
+if-goto String.intValue-3
+push local 1
+return
+goto String.intValue-4
+label String.intValue-3
+label String.intValue-4
+push local 1
+push constant 10
+call Math.multiply 2
+push pointer 0
+push this 2
+push local 0
+add
+pop pointer 1
+push that 0
+call String.charToInt 2
+add
+pop local 1
+push local 0
+push constant 1
+add
+pop local 0
+goto String.intValue-1
+label String.intValue-2
+push local 1
+return
+function String.setInt 0
+push argument 0
+pop pointer 0
+push constant 0
+pop this 1
+push argument 1
+push constant 0
+lt
+not
+if-goto String.setInt-1
+push argument 1
+neg
+pop argument 1
+push pointer 0
+push constant 45
+call String.appendChar 2
+pop temp 0
+goto String.setInt-2
+label String.setInt-1
+label String.setInt-2
+push pointer 0
+push argument 1
+call String.setInt_core 2
+pop temp 0
+push constant 0
+return
+function String.setInt_core 3
+push argument 0
+pop pointer 0
+push argument 1
+pop local 1
+push local 1
+push local 1
+push constant 10
+call Math.divide 2
+push constant 10
+call Math.multiply 2
+sub
+pop local 0
+push pointer 0
+push local 0
+call String.intToChar 2
+pop local 2
+push local 1
+push constant 10
+call Math.divide 2
+pop local 1
+push local 1
+push constant 10
+gt
+not
+if-goto String.setInt_core-1
+push pointer 0
+push local 2
+call String.appendChar 2
+pop temp 0
+goto String.setInt_core-2
+label String.setInt_core-1
+push pointer 0
+push local 1
+call String.setInt 2
+pop temp 0
+push pointer 0
+push local 2
+call String.appendChar 2
+pop temp 0
+label String.setInt_core-2
+push constant 0
+return
+function String.newLine 0
+push constant 128
+return
+function String.backSpace 0
+push constant 129
+return
+function String.doubleQuote 0
+push constant 34
+return
+function String.intToChar 0
+push argument 0
+push constant 48
+add
+return
+function String.charToInt 0
+push argument 0
+push constant 48
+sub
+return
+function String.isDigit 0
+push argument 0
+push constant 48
+lt
+not
+if-goto String.isDigit-1
+push constant 0
+return
+goto String.isDigit-2
+label String.isDigit-1
+label String.isDigit-2
+push argument 0
+push constant 57
+gt
+not
+if-goto String.isDigit-3
+push constant 0
+return
+goto String.isDigit-4
+label String.isDigit-3
+label String.isDigit-4
+push constant 1
+neg
+return
